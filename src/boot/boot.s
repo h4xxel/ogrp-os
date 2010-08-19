@@ -1,24 +1,11 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; OGRP-OS Bootloader - Loads OGRP-OS kernel to memory				;
-;										;
-; This package is free software; you can redistribute it and/or modify		;
-; it under the terms of the GNU General Public License as published by		;
-; the Free Software Foundation; either version 2 of the License, or		;
-; (at your option) any later version.						;
-;										;
-; This package is distributed in the hope that it will be useful,		;
-; but WITHOUT ANY WARRANTY; without even the implied warranty of		;
-; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the			;
-; GNU General Public License for more details.					;
-;										;
-; You should have received a copy of the GNU General Public License		;
-; along with this package; if not, write to the Free Software			;
-; Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA	;
-;										;
-; Version 0.1									;
-; Copyright 2009 JockePockee Mr3D						;
-; Email: jockpockee@gmail.com, alson@passagen.se				;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; * This file is a part of the ogrp-os project
+; * Version: 0.1 19 Aug 2010
+;
+; * Authors: jockepockee, mr3d (jockepockee.com, h4xxel.ath.cx)
+; * Email: jocke@h4xx.org h4xxel@h4xx.org
+;
+; * Copyright 2010 ogrp
+; * License: see COPYING file
 
 ;Supports filesystem OGRP-FS version 1
 
