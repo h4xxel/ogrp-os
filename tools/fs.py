@@ -1,5 +1,14 @@
 #! /usr/bin/python
 
+# * This file is a part of the ogrp-os project
+# * Version: 0.1 19 Aug 2010
+#
+# * Authors: jockepockee (jockepockee.com)
+# * Email: jocke@h4xx.org
+#
+# * Copyright 2010 ogrp
+# * License: see COPYING file
+
 import sys
 
 def main(argc, argv):
