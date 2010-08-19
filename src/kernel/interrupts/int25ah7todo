@@ -1,0 +1,10 @@
+*Check for file---
+	Not Exist: Return error---
+*Check attributes---
+	No Write: Return error---
+*Set up filetable
+	If buffer is larger than file
+		Search for free clusters to append
+	If buffer is smaller than file---
+		Delete the last clusters and defrag filetable---
+*Write file

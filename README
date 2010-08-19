@@ -1,0 +1,12 @@
+This package comes with a pre-compiled image for you to easily be able to test the operating system.
+The source code can be compiled and linked using nasm and ld.
+You can use any standard make utility to auto make the OS, however installing (create an image file)
+will be possible with the OGRP-FS driver for linux (yet to be written).
+
+To create an image file one has to build the source files and put them on a floppy disk or in a disk
+image in the following order:
+
+Sector 1: boot
+Sector 2-4: filetable
+
+The rest of the files are placed in order according to filetable (see OGRP-FS documentation)
