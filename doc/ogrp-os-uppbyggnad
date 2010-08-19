@@ -1,64 +1,44 @@
  -----------------------------------------------------------------------
-| 			     OGRP-OS Uppbyggnad				|
+| 			     ogrp-os Uppbyggnad				|
 |			   **********************			|
 |									|
-|			Av: JockePockee 2009-07-18			|
+|			Av: jockepockee 2009-07-18			|
 |									|
 |				Version 0.1				|
-|				 Utkast 1				|
+|				 Utkast 2				|
  -----------------------------------------------------------------------
 
+Om ogrp-os
+----------
+ogrp-os Ã¤r ett hobby projekt som gÃ¥r ut pÃ¥ att vi som primÃ¤ra utvecklare
+ska lÃ¤ra oss mer om hur os-dev gÃ¥r till. Vi (jockepockee och mr3d) har
+bÃ¥de tillsammans och enskilld haft tidigare projekt med samma inriktnuing.
+Nu slÃ¥r vi vÃ¥ra kloka huvuden ihop fÃ¶r att gÃ¶ra vÃ¥rt bÃ¤sta.
 
- Om OGRP-OS
-------------
-OGRP-OS är ett hobbyprojekt startat i lärningsyfte. OGRP-OS är inte
-tänkt att ersätta något befintligt system.
+Systemet licenseras under en BSD license som innebÃ¤r att du fÃ¥r Ã¤ndra och
+vidaredistribuera programmet sÃ¥ lÃ¤nge du copyrightnotisen kvarstÃ¥r
+BSD licensen tar ingen hÃ¤nsyn till opensource. FÃ¶r mer info se COPYING
 
-OGRP-OS är licenserat under GNU General Public License som innebär
-att du som användare har rätt att modfiera och/eller vidaredistribuera
-systemet sålänge Licensen inte ändras. (Se GNU GPL för mer detaljer)
+Filsystem
+---------
+Filsystemet kommer att vara en variant som Ã¤r fullt kompatibel med ext2fs.
+Med skillnaden att funktionen fÃ¶r mappar inte kommer att stÃ¶djas i ogrp-os.
 
-OGRP-OS är tänkt att stödja både nya och gamla datorer. Minimumkrav är
-IBM Kompatibel PC med Intel 8086 eller senare. Nyare hårdvara ger också
-möjligheten till "ögongodis" och fler funktioner i form av multitasking
-och liknande.
+FÃ¶r att organisera dina filer anvÃ¤nder kommer filerna istÃ¤llet taggas fÃ¶r att
+kunna sÃ¤ga vilket program eller dylikt som den tillhÃ¶r.
 
- Kernel Mode
--------------
-När OGRP-OS startas för första gången är det tänkt att användaren har fulla
-rättigheter till hårdvaran, dvs användaren får skriva fritt till hårdvaran
+Om filsystemet monteras i tillexempel ett linuxsystem kommer det inte vara
+nÃ¥gon skillnad frÃ¥n ext2, skapandet av mappar kommer i ogrp-os att ses som
+reserverat omrÃ¥de fÃ¶r att bibehÃ¥lla kompatibliteten med ext2.
 
-Detta kallas kernel mode. För att användaren ska få optimal kontroll över
-hårdvaran används inga skyddsåtgärder som läget Protected Mode erbjuder.
-Detta gör dock att användaren inte har tillgång till RAM 1MB > eftersom
-processorn körs i läget Real Mode.
+Filernas taggar kommer i fÃ¶rsta hand att sparas i ext2's form av filnamn.
+Taggarna separeras med punkter och fÃ¶rsta taggen indikerar sjÃ¤lva filnamnet.
 
-Kernel Mode är främst till för att ställa in datorn för ditt bruk.
-I Kernel Mode kan du senare gå in i Protected Mode och utnyttja hela
-datorns kapacitet.
+Framtida lÃ¶sningar kan vara att taggarna spars i filens fÃ¶rsta delar.
 
-Kernel Mode erbjuder autostart config som innebär att du inte behöver
-ställa in alla inställningar varje gång du startar datorn. Alla
-inställningar sparas i ett visst utrymme/fil på den lagringsmedia du använder.
+Program
+-------
+Systemet kommer att vara uppbyggt av ett antal program. Varje program kommer
+ha till uppgift att gÃ¶ra *en* sak. Dessa sys sedan ihop till ett enda system.
 
- User Mode
------------
-Det är här du utför ditt arbete vid datorn. Det är här effekterna i din
-kärn konfiguration ger mest effekt. Om du valt att köra OGRP-OS i Real Mode
-så är User Mode bara ett mellanläge för att kunna använda dina 16 bitars
-program på hårddisken.
-
-Har du däremot valt att köra OGRP-OS i Protected Mode så har du möjligheten
-att ställa in advancerade minnesskydd och andra hårdvaru funktioner som din
-dator stödjer.
-
-User Mode är ditt hem. Dina personliga inställningar hanteras här.
-Program kan startas genom att använda programmet "fs" som finns direktlänkat
-till prompten som standardinställning
-
- Filsystem
------------
-Alla filer på hårddisken hanteras med programmet "fs". Här kan du starta
-andra program. skriva från minnessektioner till filer eller starta andra
-program som finns tillgängligt.
-
+SÃ¥ hÃ¤r jobbar linux och andra *nix-like system, som Ã¤r det system vi utvecklar ogrp-os pÃ¥.
