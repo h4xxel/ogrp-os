@@ -33,7 +33,7 @@ mov	eax, cr0
 or	eax, 1
 mov	cr0,eax
 ;mov	[es:0004h], word 'cc'
-jmp	8h:testkernel
+jmp	8h:pmode
 
 ;Hang
 cli
@@ -102,16 +102,7 @@ MSGBoot	db "stage2 loaded", 0h
 MSGFail	db " ..failed",0h
 CHRProg	db 0DBh
 
-testkernel:
-	[bits 32]
-	;Fucking pmode, baby! :DD
-	mov	eax, 10h
-	mov	ds, ax
-	mov	es, ax
-	mov	ss, ax
-	mov	[0xB800e], word 'dd'
-	cli
-	hlt
+%include 'stage2pmode.asm'
 
 ; Just make it fill a whole sector
 times 512 - ($ - $$) db 0
