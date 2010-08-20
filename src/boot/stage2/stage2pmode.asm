@@ -15,5 +15,6 @@ mov	ds, ax
 mov	es, ax
 mov	ss, ax
 mov	[0xB800e], word 'dd'
-cli
-hlt
+;Commented out to continue to c-kernel
+;cli
+;hlt

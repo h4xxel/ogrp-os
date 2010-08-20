@@ -135,7 +135,7 @@ BSec	db 2h	;Sector number for stage2
 BCyl	db 0h	;Cylinder number for stage2
 BDrive	db 0h	;Drive number for stage2
 BHead	db 0h	;Head number for stage2
-BSize	db 1h	;Size of stage2 in sectors
+BSize	db 5h	;Size of stage2 in sectors
 
 Prog	db 0h
 
