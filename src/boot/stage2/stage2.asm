@@ -21,7 +21,23 @@ call	MoveClear
 mov	bx, MSGBoot
 call	Print
 
+cli
+;mov	ax, 10h
+;mov	ds, ax
+;mov	ss, ax
+;mov	es, ax
+call	LoadGDT
+;mov	[es:0000h], word 'aa'
+mov	eax, cr0
+;mov	[es:0002h], word 'bb'
+or	eax, 1
+mov	cr0,eax
+;mov	[es:0004h], word 'cc'
+jmp	8h:testkernel
+
 ;Hang
+cli
+hlt
 jmp	$
 
 
@@ -76,11 +92,9 @@ LoadError:
 	cli
 	hlt
 
-
+%include 'gdt.asm'
 
 Prog	db 2h
-
-
 
 MSGNone	times 28 db 20h
 	db 0h
@@ -88,5 +102,16 @@ MSGBoot	db "stage2 loaded", 0h
 MSGFail	db " ..failed",0h
 CHRProg	db 0DBh
 
-; Boot Sector 512 bytes big + boot signature
+testkernel:
+	[bits 32]
+	;Fucking pmode, baby! :DD
+	mov	eax, 10h
+	mov	ds, ax
+	mov	es, ax
+	mov	ss, ax
+	mov	[0xB800e], word 'dd'
+	cli
+	hlt
+
+; Just make it fill a whole sector
 times 512 - ($ - $$) db 0

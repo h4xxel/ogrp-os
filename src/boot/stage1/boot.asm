@@ -22,9 +22,9 @@ xor	dx, dx
 int	10h
 
 ;Disable cursor
-mov ch, 32
-mov ah, 1
-int 10h
+;mov ch, 32
+;mov ah, 1
+;int 10h
 
 ;Print Boot Messages
 mov	bx, Window
