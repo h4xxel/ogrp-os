@@ -7,4 +7,4 @@ FILENAME	= boot
 
 all:
 	@echo " [ AS ]		stage1/boot.asm"
-	@$(AS) $(CFLAGS) -o boot boot.asm
+	@$(AS) $(ASFLAGS) -o boot boot.asm

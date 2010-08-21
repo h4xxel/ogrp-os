@@ -5,9 +5,9 @@ FILENAME	= image.img
 all: stage2
 
 test: stage2
-	@echo " [ APPEND ]	stage1/boot >> $(FILENAME)"
+	@echo " [ APPEND ]	stage1/boot > $(FILENAME)"
 	@cat stage1/boot >> $(FILENAME)
-	@echo " [ APPEND ]	stage2/stage2 >> $(FILENAME)"
+	@echo " [ APPEND ]	stage2/stage2 > $(FILENAME)"
 	@cat stage2/stage2 >> $(FILENAME)
 	@echo " [ APPEND ]	../ckernel/ckernel-bin >> $(FILENAME)"
 	@cat ../ckernel/ckernel-bin >> $(FILENAME)

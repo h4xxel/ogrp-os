@@ -5,7 +5,7 @@
 
 /* This is the textbuffer startaddress
  * in x86 based computers */
-#define TEXTBUF 0xb800
+#define TEXTBUF 0xb8000
 
 /* Teletype prototypes */
 void ckcur_update(void);
