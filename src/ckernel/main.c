@@ -9,6 +9,8 @@
 ; * License: see COPYING file
  */
 
+void ckmain(void);
+
 #include <drivers/teletype.h>
 
 void

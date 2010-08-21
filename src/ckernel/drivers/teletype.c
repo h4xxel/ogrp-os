@@ -17,7 +17,7 @@ static pos_t cursor_p;
 
 void 		/* Update hardware cursor to new position */
 ckcur_update(void) {
-	uint16_t param = (uint16_t) cursor_p.x + (cursor_p.y * 80);
+	uint16_t param = (uint16_t) (cursor_p.x + (cursor_p.y * 80));
 
 	out(0x3D, 0x0F);
 	out(0x3D5, (uint8_t) (param & 0xff));
@@ -31,8 +31,10 @@ ckputc_base(uint8_t c, uint8_t attr) {
 	uint16_t *dest = (uint16_t *) TEXTBUF;
 	dest += cursor_p.x + (cursor_p.y * 80);
 
-	*dest++ = c | (attr << 8);		
-	if ((cursor_p.x += 2) >= 80 || c == '\n') {
+	*dest++ = (uint16_t) c | attr;
+
+	cursor_p.x += 2;		
+	if (cursor_p.x >= 80 || c == '\n') {
 		cursor_p.x = 0;
 		cursor_p.y++;
 	}

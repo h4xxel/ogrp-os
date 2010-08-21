@@ -2,7 +2,7 @@ AS = nasm
 CC = gcc
 LD = ld
 
-CFLAGS = -c -std=c99 -nostdlib -nostartfiles -nodefaultlibs  -Iinclude/ \
+CFLAGS = -c -nostdlib -nostartfiles -nodefaultlibs  -Iinclude/ \
 		-Wall -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-align \
 		-Wwrite-strings -Wmissing-prototypes -Wmissing-declarations \
 		-Wredundant-decls -Wnested-externs -Winline -Wno-long-long \
@@ -13,21 +13,30 @@ ASFLAGS	= -f aout
 
 OBJFILES = general.o main.o portio.o drivers/teletype.o
 
-FILENAME = ckernel
+FILENAME	= ckernel-bin
 
 .PHONY: all clean
 
 all: $(OBJFILES)
-	$(LD) $(LDFLAGS) -o $(FILENAME) $(OBJFILES)
+	@echo " [ LINKING ]	$(OBJFILES)"
+	@$(LD) $(LDFLAGS) -o $(FILENAME) $(OBJFILES)
+	@echo " Done. Your kernel binary is located at:"
+	@echo " src/ckernel/$(FILENAME)"
+	@echo
 
 clean:
+	@echo " [ CLEANING ]"
+	@echo " Objectfiles:	$(OBJFILES)"
+	@echo " Binaries:	$(FILENAME)"
 	@rm $(OBJFILES)
 	@rm $(FILENAME)
+	@echo " Done."
+	@echo
 
 .c.o:
-	$(CC) $(CFLAGS) -o $@ $< 
-	@echo
+	@echo " [ CC ]		$<"
+	@$(CC) $(CFLAGS) -o $@ $< 
 
 .s.o:
-	$(AS) $(ASFLAGS) -o $@ $<
-	@echo
+	@echo " [ AS ]		$<"
+	@$(AS) $(ASFLAGS) -o $@ $<

@@ -8,7 +8,7 @@ typedef unsigned char uint8_t;
 
 /* Keeps track of positions */
 typedef struct {
-	uint16_t x, y;
+	int x, y;
 } pos_t;
 
 #endif
