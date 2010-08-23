@@ -9,7 +9,7 @@ ret
 
 IRQ6Handler:
 	pusha
-	;mov	[ds:10000+DriveReady]
+	mov	[DriveReady], byte 1h
 	mov	al, 20h
 	out	20h, al
 	popa

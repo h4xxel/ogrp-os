@@ -8,7 +8,7 @@
 ; * License: see COPYING file									;
 
 [BITS 16]	; We are still in realmode :)
-[ORG 0000h]	; BIOS loads us to 0x0000:0x7c00
+[ORG 0000h]
 
 jmp stage2
 db	"STAGE2"
@@ -18,24 +18,20 @@ pop	ds
 ;Print Boot Messages
 call	ProgressStep
 call	MoveClear
-mov	bx, MSGBoot
+mov	bx, MSGPmode
 call	Print
 
 cli
-;mov	ax, 10h
-;mov	ds, ax
-;mov	ss, ax
-;mov	es, ax
 call	LoadGDT
-;mov	[es:0000h], word 'aa'
 mov	eax, cr0
-;mov	[es:0002h], word 'bb'
 or	eax, 1
 mov	cr0,eax
-;mov	[es:0004h], word 'cc'
 jmp	8h:pmode
 
 ;Hang
+call	MoveFail
+mov	bx, MSGFail
+call	Print
 cli
 hlt
 jmp	$
@@ -97,10 +93,10 @@ LoadError:
 Prog	db 2h
 
 MSGNone	times 28 db 20h
-	db 0h
-MSGBoot	db "stage2 loaded", 0h
-MSGFail	db " ..failed",0h
-CHRProg	db 0DBh
+		db 0h
+MSGPmode	db "Entering pmode", 0h
+MSGFail		db " ..failed",0h
+CHRProg		db 0DBh
 
 %include 'stage2pmode.asm'
 

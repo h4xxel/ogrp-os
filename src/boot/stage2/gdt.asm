@@ -32,4 +32,11 @@ gdt_data:
 	db 92h
 	db 1100_1111b
 	db 0h
+	
+	dw 0FFFFh
+	dw 0h
+	db 1h
+	db 92h
+	db 1100_1111b
+	db 0h
 gdt_end:

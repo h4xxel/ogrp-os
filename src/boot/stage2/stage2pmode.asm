@@ -10,11 +10,11 @@
 pmode:
 [bits 32]
 ;Fucking pmode, baby! :DD
-mov	eax, 10h
+mov	eax, 18h
 mov	ds, ax
+mov	eax, 10h
 mov	es, ax
 mov	ss, ax
-mov	[0xB800e], word 'dd'
 
 call	RemapPIC
 call	LoadIDT
@@ -58,10 +58,10 @@ print32:
 	mov	edi, 0B8000h
 	add	edi, edx
 	Print32Next:
-	mov	al, [cs:ebx]
+	mov	al, [ds:ebx]
 	cmp	al,0
 	je	Print32End
-		mov	[ds:edi], ax
+		mov	[es:edi], ax
 		add	edi, 2
 		inc	ebx
 	jmp	Print32Next
