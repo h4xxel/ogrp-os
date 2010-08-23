@@ -89,3 +89,7 @@ ContinueC:
 ;Commented out to continue to c-kernel
 cli
 hlt
+
+; Compatibility code
+push	es
+pop	ds
