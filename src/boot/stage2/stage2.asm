@@ -101,4 +101,4 @@ CHRProg		db 0DBh
 %include 'stage2pmode.asm'
 
 ; Just make it fill a whole sector
-times 1024 - ($ - $$) nop
+times 1536 - ($ - $$) nop

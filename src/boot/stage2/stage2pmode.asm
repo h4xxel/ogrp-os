@@ -18,21 +18,37 @@ mov	ss, ax
 
 call	RemapPIC
 call	LoadIDT
+
 mov	eax, 0h
 mov	ebx, ISRDiv0
 call	RegisterISR
 
-call	floppy_detect_drive
+mov	eax, 1
+mov	ebx, UnhandledInterrupt
+mov	cx, 30h
+register_dummy
+	call	RegisterISR
+	inc	ax
+loop	register_dummy
 
-;sti
+call	timer_setup
+
+call	floppy_detect_drive
+mov	eax, 1000h
+call	sleep
+
+mov	ebx, omg
+mov	ah, 1
+mov	edx, 0
+call	print32
 
 ;xor	ax, ax
-;div	ax
+;div	ax		;Test divide by zero handler
 
 jmp	$
 
 jmp	ContinueC
-
+omg db 'lol',0
 ISRDiv0:
 	pusha
 	mov	ebx, MSGDiv0
@@ -83,6 +99,7 @@ panic:
 MSGPanic	db "PANIC: ", 0h
 
 %include	'interrupts.asm'
+%include	'time.asm'
 %include	'driver_floppy.asm'
 
 ContinueC:

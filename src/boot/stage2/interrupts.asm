@@ -1,3 +1,4 @@
+[bits 32]
 LoadIDT:
 	mov	edi, 12000h
 	mov	cx, 0FFFFh
@@ -13,6 +14,8 @@ idtr	dw 0FFFFh
 RegisterISR:
 	; ebx: ISR linear address
 	; eax: Interrupt Number
+	push	ebx
+	push	eax
 	mov	edi, 12000h
 	mul	word [ds:IntSize]
 	shl	dx, 16
@@ -29,6 +32,8 @@ RegisterISR:
 	inc	edi
 	shr	ebx, 16
 	mov	[es:edi], bx
+	pop	eax
+	pop	ebx
 ret
 IntSize	dw 8
 
@@ -37,15 +42,15 @@ GetISR:
 ret
 
 UnhandledInterrupt:
-pusha
-	mov	ebx, MSGUnhandled
-	mov	ah, 07h
-	xor	edx, edx
-	call	print32
+	pusha
+	;mov	ebx, MSGUnhandled
+	;mov	ah, 07h
+	;xor	edx, edx
+	;call	print32
 	mov	al, 20h
 	out	20h, al
 	out	0Ah, al
-popa
+	popa
 iret
 MSGUnhandled	db "Unhandled Interrupt", 0
 
@@ -59,7 +64,7 @@ RemapPIC:
 	call	io_wait
 	
 	;Send init+ICW4
-	mov	al,	11h
+	mov	al, 11h
 	out	020h, al
 	call	io_wait
 	out	0A0h, al
@@ -90,6 +95,7 @@ RemapPIC:
 	
 	;Restore IRQ masks
 	pop	ax
+	mov	ax, 0FFh		;;;;;;REMOVE
 	out	0A1h, al
 	mov	al, ah
 	out	021h, al

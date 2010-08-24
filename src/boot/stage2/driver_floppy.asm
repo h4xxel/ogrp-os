@@ -32,7 +32,6 @@ floppy_issue_command:
 	mov	al, ah
 	out	floppy_reg_base+floppy_reg_FIFO, al	;Write FIFO
 	ret
-	
 floppy_issue_command_quit:
 mov	ah, 0h
 ret
