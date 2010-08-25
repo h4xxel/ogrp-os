@@ -1,10 +1,23 @@
 [bits 32]
 
-driver_init:
+floppy_irq_wait:
+	pushf
+	sti
+	floppy_irq_wait_loop:
+		hlt
+		cmp	[DriveReady], byte 0
+	je	floppy_irq_wait_loop
+	popf
+ret
+
+floppy_driver_init:
 	mov	eax, 26h
 	mov	ebx, IRQ6Handler
 	call	RegisterISR
 	; Unmask IRQ
+	in	al, 021h
+	and	al, 10111111b
+	out	021h, al
 ret
 
 IRQ6Handler:
@@ -14,35 +27,126 @@ IRQ6Handler:
 	out	20h, al
 	popa
 iret
-DriveReady	db 1
+DriveReady	db 0
+
+floppy_check_interrupt:
+	mov	ah, floppy_cmd_sense_interrupt
+	call	floppy_issue_command
+	call	floppy_read_command
+	mov	[floppy_st0], al
+	call	floppy_read_command
+	mov	[floppy_cyl], al
+ret
+floppy_st0	db 0
+floppy_cyl	db 0
 
 floppy_issue_command:
 ; AH=Command
-	;in	al, floppy_reg_base+floppy_reg_MSR	; Read MSR
-	;or	al, 11000000b
-	;cmp	al, 10000000b	; Check RQM and DIO
-	;je	floppy_issue_command_quit
-	;mov	al, ah
-	;out	floppy_reg_base+floppy_reg_FIFO, al	;Write FIFO
+	push	ax
+	mov	ecx, 300d
 	floppy_issue_command_test_RQM:
-		in	al, floppy_reg_base+floppy_reg_MSR	; Read MSR
-		or	al, 10000000b
-		cmp	al, 10000000b	; Check RQM
-	jne	floppy_issue_command_test_RQM
+		mov	eax, 0Ah
+		call	sleep
+		mov	dx, floppy_reg_base+floppy_reg_MSR
+		in	al, dx	; Read MSR
+		and	al, 80h
+		cmp	al, 80h	; Check RQM
+		je	floppy_issue_command_quit
+	loop	floppy_issue_command_test_RQM
+	
+	mov	ebx, ERRFloppy_cmd
+	pop	ax
+	call	panic
+	
+	floppy_issue_command_quit:
+	pop	ax
 	mov	al, ah
-	out	floppy_reg_base+floppy_reg_FIFO, al	;Write FIFO
-	ret
-floppy_issue_command_quit:
-mov	ah, 0h
+	mov	dx, floppy_reg_base+floppy_reg_FIFO
+	out	dx, al	;Write FIFO
 ret
+
+floppy_read_command:
+; Returns AL=return data
+	mov	ecx, 300d
+	floppy_read_command_test_RQM:
+		mov	eax, 0Ah
+		call	sleep
+		mov	dx, floppy_reg_base+floppy_reg_MSR
+		in	al, dx	; Read MSR
+		and	al, 80h
+		cmp	al, 80h	; Check RQM
+		je	floppy_read_command_quit
+	loop	floppy_read_command_test_RQM
+	
+	mov	ebx, ERRFloppy_cmd
+	call	panic
+	
+	floppy_read_command_quit:
+	mov	dx, floppy_reg_base+floppy_reg_FIFO
+	in	al, dx	;Read FIFO
+ret
+
+ERRFloppy_cmd	db 'error in floppy subsystem'
 
 floppy_controller_reset:
 	xor	al, al
-	out	floppy_reg_base+floppy_reg_DOR, al
+	mov	dx, floppy_reg_base+floppy_reg_DOR
+	out	dx, al
 	call	io_wait
 	mov	al, 00001100b
-	out	floppy_reg_base+floppy_reg_DOR, al
+	out	dx, al
 	call	io_wait
+	call	floppy_irq_wait
+	call	floppy_check_interrupt
+	mov	dx, floppy_reg_base+floppy_reg_CCR
+	mov	al, 0	; Disk transfer speed. fix later
+	
+	mov	ah, floppy_cmd_specify
+	call	floppy_issue_command
+	mov	ah, 0DFh	;steprate 3ms, unload time 240ms
+	call	floppy_issue_command
+	mov	ah, 02h		;load tame 16ms. no-DMA 0
+	call	floppy_issue_command
+	
+	call	floppy_calibrate
+ret
+
+floppy_calibrate:
+	call	floppy_motor_on
+	mov	ecx, 0Ah
+	floppy_calibrate_loop:
+		mov	ah, floppy_cmd_recalibrate
+		call	floppy_issue_command
+		mov	ah, 0	;Drive number, fix later
+		call	floppy_issue_command
+		
+		call	floppy_irq_wait
+		call	floppy_check_interrupt
+		
+		cmp	[floppy_cyl], byte 0
+		je	floppy_calibrate_end
+	loop	floppy_calibrate_loop
+	xor	edx, edx
+	mov	ah, 04h
+	mov	ebx, floppy_CalibrateError
+floppy_calibrate_end:
+call	floppy_motor_off
+ret
+
+floppy_CalibrateError	db 'Floppy Calibration Error',0
+
+floppy_motor_on:
+	mov	dx, floppy_reg_base+floppy_reg_DOR
+	mov	al, 1Ch
+	out	dx, al
+	mov	eax, 512d
+	call	sleep
+ret
+
+floppy_motor_off:
+	mov	dx, floppy_reg_base+floppy_reg_DOR
+	mov	al, 0Ch
+	out	dx, al
 ret
 
 floppy_detect_drive:

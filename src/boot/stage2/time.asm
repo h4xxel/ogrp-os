@@ -4,7 +4,7 @@ sleep:
 	mov	[ds:TimerSemaphore], eax
 	sti
 	sleep_loop:
-		;hlt
+		hlt
 		cmp	dword [ds:TimerSemaphore], 0
 	jne	sleep_loop
 	popf

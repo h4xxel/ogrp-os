@@ -26,7 +26,7 @@ call	RegisterISR
 mov	eax, 1
 mov	ebx, UnhandledInterrupt
 mov	cx, 30h
-register_dummy
+register_dummy:
 	call	RegisterISR
 	inc	ax
 loop	register_dummy
@@ -34,12 +34,27 @@ loop	register_dummy
 call	timer_setup
 
 call	floppy_detect_drive
-mov	eax, 1000h
+
+mov	eax, 1024d
 call	sleep
 
 mov	ebx, omg
 mov	ah, 1
-mov	edx, 0
+xor	edx, edx
+call	print32
+
+mov	eax, 1024d
+call	sleep
+
+mov	ebx, omg2
+mov	ah, 1
+call	print32
+
+mov	eax, 1024d
+call	sleep
+
+mov	ebx, omg3
+mov	ah, 1
 call	print32
 
 ;xor	ax, ax
@@ -48,7 +63,9 @@ call	print32
 jmp	$
 
 jmp	ContinueC
-omg db 'lol',0
+omg db 'THIS',0
+omg2 db 'IS  ',0
+omg3 db 'SPARTA!',0
 ISRDiv0:
 	pusha
 	mov	ebx, MSGDiv0
