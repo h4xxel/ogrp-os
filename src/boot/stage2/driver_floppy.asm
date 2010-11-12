@@ -7,6 +7,7 @@ floppy_irq_wait:
 		hlt
 		cmp	[DriveReady], byte 0
 	je	floppy_irq_wait_loop
+	mov	[DriveReady], byte 0
 	popf
 ret
 
@@ -22,6 +23,7 @@ ret
 
 IRQ6Handler:
 	pusha
+	
 	mov	[DriveReady], byte 1h
 	mov	al, 20h
 	out	20h, al
@@ -42,6 +44,7 @@ floppy_cyl	db 0
 
 floppy_issue_command:
 ; AH=Command
+	pusha
 	push	ax
 	mov	ecx, 300d
 	floppy_issue_command_test_RQM:
@@ -63,6 +66,7 @@ floppy_issue_command:
 	mov	al, ah
 	mov	dx, floppy_reg_base+floppy_reg_FIFO
 	out	dx, al	;Write FIFO
+	popa
 ret
 
 floppy_read_command:
@@ -129,11 +133,16 @@ floppy_calibrate:
 	xor	edx, edx
 	mov	ah, 04h
 	mov	ebx, floppy_CalibrateError
+	call	print32
 floppy_calibrate_end:
 call	floppy_motor_off
+mov	ah, 02h
+mov	ebx, floppy_CalibrateGood
+call	print32
 ret
 
 floppy_CalibrateError	db 'Floppy Calibration Error',0
+floppy_CalibrateGood	db 'Floppy Calibration Success',0
 
 floppy_motor_on:
 	mov	dx, floppy_reg_base+floppy_reg_DOR
@@ -147,6 +156,124 @@ floppy_motor_off:
 	mov	dx, floppy_reg_base+floppy_reg_DOR
 	mov	al, 0Ch
 	out	dx, al
+ret
+
+floppy_seek:
+	; CH=Cylinder
+	; CL=Sector
+	; DH=Head
+	; DL=Drive
+	pusha
+	call	floppy_motor_on
+	
+	mov	ah, floppy_cmd_seek
+	call	floppy_issue_command
+	
+	mov	ah, dh
+	shl	ah, 2
+	call	floppy_issue_command
+	
+	mov	ah, ch
+	call	floppy_issue_command
+	
+	call	floppy_irq_wait
+	call	floppy_check_interrupt
+	
+	call	floppy_motor_off
+	
+	xor	dx, dx
+	mov	ah, 02h
+	mov	ebx, seeksuccess
+	call	print32
+	
+	popa
+ret
+
+seeksuccess db "Seek Success",0
+
+floppy_dma_init_read:
+	mov	al, 6h
+	out	0ah, al	;mask chanel 2
+	mov	al, 0ffh
+	out	0ch, al	;reset dma flip-flop
+	mov	al, [floppy_dma_mem]
+	out	4h, al	;write low address byte
+	mov	al, [floppy_dma_mem+1]
+	out	4h, al	;write high address byte
+	mov	al, [floppy_dma_mem+2]
+	out	81h, al	;write external page register
+	
+	mov	al, 0ffh
+	out	0ch, al	;reset dma flip-flop
+	mov	al, [floppy_dma_size]
+	out	5h, al	;write low size byte
+	mov	al, [floppy_dma_size+1]
+	out	5h, al	;write high size byte
+	
+	mov	al, floppy_dir_read
+	out	0bh, al	;read
+	mov	al, 2h
+	out	0ah, al	;unmask chanel 2
+	
+	mov	dx, 32d
+	mov	ah, 02h
+	mov	ebx, dmasuccess
+	call	print32
+ret
+
+dmasuccess db "DMA Success",0
+
+floppy_track_read:
+	; CH: cylinder
+	push	cx
+	mov	dh, 0
+	call	floppy_seek
+	mov	dh, 1
+	call	floppy_seek
+	
+	call	floppy_motor_on
+	call	floppy_dma_init_read
+	
+	mov	eax, 0Ah
+	call	sleep
+	
+	mov	ah, floppy_cmd_read_data
+	or	ah, 0C0h	;flags for multitrack and MFM
+	call	floppy_issue_command
+	
+	mov	ah, 0	;head 0, drive 0
+	call	floppy_issue_command
+	pop	cx
+	mov	ah, ch	;cylinder
+	call	floppy_issue_command
+	mov	ah, 0	;head 0
+	call	floppy_issue_command
+	mov	ah, 1	;sector 1
+	call	floppy_issue_command
+	mov	ah, 2	;Bytes per sector *128
+	call	floppy_issue_command
+	mov	ah, 18	;Number of tracks
+	call	floppy_issue_command
+	mov	ah, 1bh	;hard coded GAP3 length
+	call	floppy_issue_command
+	mov	ah, 0FFh	;data length (0xff if B/S != 0)
+	call	floppy_issue_command
+	
+	call	floppy_irq_wait
+	
+	;Read status
+	call	floppy_read_command
+	call	floppy_read_command
+	call	floppy_read_command
+	
+	;more status
+	call	floppy_read_command
+	call	floppy_read_command
+	call	floppy_read_command
+	call	floppy_read_command
+	
+	call	floppy_motor_off
+	
 ret
 
 floppy_detect_drive:
@@ -185,6 +312,12 @@ floppy_drive_types:
 	db	'UNKNOWN    ', 0h
 
 floppy_reg_base	equ	03f0h
+
+floppy_dma_mem	dd 14000h
+floppy_dma_size	dw 4800h-1
+
+floppy_dir_read		equ 46h
+floppy_dir_write		equ 4ah
 
 ; Floppy Registers
 	floppy_reg_SRA	equ 0h

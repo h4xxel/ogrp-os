@@ -19,24 +19,31 @@ gdtr:
 gdt_data:
 	dq 0h
 	
+	dw 0FFFFh		;limit 0:15
+	dw 0h		;base 0:15
+	db 1h		;base 16:23
+	db 9Ah		;access
+	db 1100_1111b	;flags_limit 16:19
+	db 0h		;base 24:31
+	
 	dw 0FFFFh
 	dw 0h
+	db 0h
+	db 92h
+	db 1100_1111b
+	db 0h
+	
+	dw 0FFFFh
+	dw 0h
+	db 1h
+	db 92h
+	db 1100_1111b
+	db 0h
+	
+	dw 0FFFFh
+	dw 4a00h
 	db 1h
 	db 9Ah
-	db 1100_1111b
-	db 0h
-	
-	dw 0FFFFh
-	dw 0h
-	db 0h
-	db 92h
-	db 1100_1111b
-	db 0h
-	
-	dw 0FFFFh
-	dw 0h
-	db 1h
-	db 92h
-	db 1100_1111b
+	db 1100_0000b
 	db 0h
 gdt_end:

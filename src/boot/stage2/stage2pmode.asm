@@ -60,12 +60,38 @@ call	print32
 ;xor	ax, ax
 ;div	ax		;Test divide by zero handler
 
+call	floppy_driver_init
+call	floppy_controller_reset
+mov	ebx, resetdone
+mov	ah, 1
+xor	edx, edx
+call	print32
+mov	ch, 0
+call	floppy_track_read
+
+mov	ebx, 14A00h
+mov	ah, 06h
+mov	edi, 0B8000h
+mov	cx, 21d
+lollol:
+	mov	al, [es:ebx]
+	mov	[es:edi], ax
+	inc ebx
+	add edi, 2
+loop	lollol
+
+mov	ebx, hangMsg
+mov	edx, 240h
+mov	ah, 03h
+call	print32
 jmp	$
+resetdone db "reset done",0
 
 jmp	ContinueC
 omg db 'THIS',0
 omg2 db 'IS  ',0
 omg3 db 'SPARTA!',0
+hangMsg db 'hang',0
 ISRDiv0:
 	pusha
 	mov	ebx, MSGDiv0
@@ -127,3 +153,4 @@ hlt
 ; Compatibility code
 push	es
 pop	ds
+arst:

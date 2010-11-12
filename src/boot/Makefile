@@ -5,12 +5,13 @@ FILENAME	= image.img
 all: stage2
 
 test: stage2
+	rm $(FILENAME)
 	@echo " [ APPEND ]	stage1/boot > $(FILENAME)"
 	@cat stage1/boot >> $(FILENAME)
 	@echo " [ APPEND ]	stage2/stage2 > $(FILENAME)"
 	@cat stage2/stage2 >> $(FILENAME)
 	@echo " [ APPEND ]	../ckernel/ckernel-bin >> $(FILENAME)"
-	@cat ../ckernel/ckernel-bin >> $(FILENAME)
+	@cat arst >> $(FILENAME)
 	@echo " Done. Your image is located at:"
 	@echo " src/boot/$(FILENAME)"
 	@echo
@@ -27,3 +28,4 @@ boot:
 
 stage2: boot
 	@$(MAKE) -C stage2/
+	nasm -o arst arst.asm
