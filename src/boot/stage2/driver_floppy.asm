@@ -3,10 +3,10 @@
 floppy_irq_wait:
 	pushf
 	sti
-	floppy_irq_wait_loop:
+	.l1:
 		hlt
 		cmp	[DriveReady], byte 0
-	je	floppy_irq_wait_loop
+	je	.l1
 	mov	[DriveReady], byte 0
 	popf
 ret
@@ -47,21 +47,21 @@ floppy_issue_command:
 	pusha
 	push	ax
 	mov	ecx, 300d
-	floppy_issue_command_test_RQM:
+	.test_rqm:
 		mov	eax, 0Ah
 		call	sleep
 		mov	dx, floppy_reg_base+floppy_reg_MSR
 		in	al, dx	; Read MSR
 		and	al, 80h
 		cmp	al, 80h	; Check RQM
-		je	floppy_issue_command_quit
-	loop	floppy_issue_command_test_RQM
+		je	.end
+	loop	.test_rqm
 	
 	mov	ebx, ERRFloppy_cmd
 	pop	ax
 	call	panic
 	
-	floppy_issue_command_quit:
+	.end:
 	pop	ax
 	mov	al, ah
 	mov	dx, floppy_reg_base+floppy_reg_FIFO
@@ -72,20 +72,20 @@ ret
 floppy_read_command:
 ; Returns AL=return data
 	mov	ecx, 300d
-	floppy_read_command_test_RQM:
+	.test_rqm:
 		mov	eax, 0Ah
 		call	sleep
 		mov	dx, floppy_reg_base+floppy_reg_MSR
 		in	al, dx	; Read MSR
 		and	al, 80h
 		cmp	al, 80h	; Check RQM
-		je	floppy_read_command_quit
-	loop	floppy_read_command_test_RQM
+		je	.end
+	loop	.test_rqm
 	
 	mov	ebx, ERRFloppy_cmd
 	call	panic
 	
-	floppy_read_command_quit:
+	.end:
 	mov	dx, floppy_reg_base+floppy_reg_FIFO
 	in	al, dx	;Read FIFO
 ret
@@ -118,7 +118,7 @@ ret
 floppy_calibrate:
 	call	floppy_motor_on
 	mov	ecx, 0Ah
-	floppy_calibrate_loop:
+	.calibrate_loop:
 		mov	ah, floppy_cmd_recalibrate
 		call	floppy_issue_command
 		mov	ah, 0	;Drive number, fix later
@@ -128,13 +128,13 @@ floppy_calibrate:
 		call	floppy_check_interrupt
 		
 		cmp	[floppy_cyl], byte 0
-		je	floppy_calibrate_end
-	loop	floppy_calibrate_loop
+		je	.end
+	loop	.calibrate_loop
 	xor	edx, edx
 	mov	ah, 04h
 	mov	ebx, floppy_CalibrateError
 	call	print32
-floppy_calibrate_end:
+.end:
 call	floppy_motor_off
 mov	ah, 02h
 mov	ebx, floppy_CalibrateGood

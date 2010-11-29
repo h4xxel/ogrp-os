@@ -2,10 +2,10 @@
 LoadIDT:
 	mov	edi, 12000h
 	mov	cx, 0FFFFh
-	ClearIDTLoop:
+	.l1:
 		mov	[es:edi], dword 0h
 		add	edi, 4h
-	loop	ClearIDTLoop
+	loop	.l1
 	lidt	[ds:idtr]
 ret
 idtr	dw 0FFFFh

@@ -40,15 +40,15 @@ jmp	$
 Print:
 	;Print NULL-termiated string
 	mov	ah, 0eh
-	PrintNext:
+	.next:
 	mov	al, [cs:bx]
 	cmp	al,0
-	je	PrintEnd
+	je	.end
 		int	10h
 		inc	bx
-	jmp	PrintNext
+	jmp	.next
 	;End
-PrintEnd:
+.end:
 ret
 
 MoveClear:

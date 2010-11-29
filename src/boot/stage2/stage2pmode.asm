@@ -103,9 +103,9 @@ MSGDiv0 db "Divide by zero",0h
 io_wait:
 	push	cx
 	mov	cx, 10h
-	io_wait_loop:
+	.l1:
 		times	5 nop
-	loop	io_wait_loop
+	loop	.l1
 	pop	cx
 ret
 
@@ -116,16 +116,16 @@ print32:
 	; edx	screen offset (160*line)+(col*2)
 	mov	edi, 0B8000h
 	add	edi, edx
-	Print32Next:
+	.next:
 	mov	al, [ds:ebx]
 	cmp	al,0
-	je	Print32End
+	je	.end
 		mov	[es:edi], ax
 		add	edi, 2
 		inc	ebx
-	jmp	Print32Next
+	jmp	.next
 	;End
-Print32End:
+.end:
 ret
 
 panic:

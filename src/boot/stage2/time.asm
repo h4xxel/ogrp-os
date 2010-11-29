@@ -3,10 +3,10 @@ sleep:
 	pushf
 	mov	[ds:TimerSemaphore], eax
 	sti
-	sleep_loop:
+	.loop:
 		hlt
 		cmp	dword [ds:TimerSemaphore], 0
-	jne	sleep_loop
+	jne	.loop
 	popf
 ret
 
@@ -34,9 +34,9 @@ ret
 ISRTimer:
 	pusha
 	cmp	dword [ds:TimerSemaphore], 0
-	je	ISRTimerQuit
+	je	.end
 		dec	dword [ds:TimerSemaphore]
-	ISRTimerQuit:
+	.end:
 	mov	al, 0Ch
 	out	70h, al
 	in	al, 71h
