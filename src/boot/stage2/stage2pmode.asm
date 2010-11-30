@@ -72,6 +72,7 @@ call	floppy_track_read
 mov	ebx, 14A00h
 mov	ah, 06h
 mov	edi, 0B8000h
+add edi, 80*2*16
 mov	cx, 21d
 lollol:
 	mov	al, [es:ebx]
