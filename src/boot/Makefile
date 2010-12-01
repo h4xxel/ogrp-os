@@ -5,6 +5,7 @@ FILENAME	= image.img
 all: stage2
 
 test: stage2
+	touch $(FILENAME)
 	rm $(FILENAME)
 	@echo " [ APPEND ]	stage1/boot > $(FILENAME)"
 	@cat stage1/boot >> $(FILENAME)

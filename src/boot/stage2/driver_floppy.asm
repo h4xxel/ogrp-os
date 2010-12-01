@@ -5,15 +5,15 @@ floppy_irq_wait:
 	sti
 	.l1:
 		hlt
-		cmp	[DriveReady], byte 0
+		cmp	[floppy_ready], byte 0
 	je	.l1
-	mov	[DriveReady], byte 0
+	mov	[floppy_ready], byte 0
 	popf
 ret
 
 floppy_driver_init:
 	mov	eax, 26h
-	mov	ebx, IRQ6Handler
+	mov	ebx, floppy_irq_handler
 	call	RegisterISR
 	; Unmask IRQ
 	in	al, 021h
@@ -21,15 +21,15 @@ floppy_driver_init:
 	out	021h, al
 ret
 
-IRQ6Handler:
+floppy_irq_handler:
 	pusha
 	
-	mov	[DriveReady], byte 1h
+	mov	[floppy_ready], byte 1h
 	mov	al, 20h
 	out	20h, al
 	popa
 iret
-DriveReady	db 0
+floppy_ready db 0
 
 floppy_check_interrupt:
 	mov	ah, floppy_cmd_sense_interrupt
@@ -57,7 +57,7 @@ floppy_issue_command:
 		je	.end
 	loop	.test_rqm
 	
-	mov	ebx, ERRFloppy_cmd
+	mov	ebx, floppy_cmd_error
 	pop	ax
 	call	panic
 	
@@ -82,7 +82,7 @@ floppy_read_command:
 		je	.end
 	loop	.test_rqm
 	
-	mov	ebx, ERRFloppy_cmd
+	mov	ebx, floppy_cmd_error
 	call	panic
 	
 	.end:
@@ -90,7 +90,7 @@ floppy_read_command:
 	in	al, dx	;Read FIFO
 ret
 
-ERRFloppy_cmd	db 'error in floppy subsystem'
+floppy_cmd_error	db 'error in floppy subsystem'
 
 floppy_controller_reset:
 	xor	al, al
@@ -132,17 +132,17 @@ floppy_calibrate:
 	loop	.calibrate_loop
 	xor	edx, edx
 	mov	ah, 04h
-	mov	ebx, floppy_CalibrateError
+	mov	ebx, floppy_calibrate_error
 	call	print32
 .end:
 call	floppy_motor_off
 mov	ah, 02h
-mov	ebx, floppy_CalibrateGood
+mov	ebx, floppy_calibrate_done
 call	print32
 ret
 
-floppy_CalibrateError	db 'Floppy Calibration Error',0
-floppy_CalibrateGood	db 'Floppy Calibration Success',0
+floppy_calibrate_error	db 'Floppy Calibration Error',0
+floppy_calibrate_done	db 'Floppy Calibration Success',0
 
 floppy_motor_on:
 	mov	dx, floppy_reg_base+floppy_reg_DOR
@@ -186,6 +186,7 @@ floppy_seek:
 	mov	ebx, seeksuccess
 	call	print32
 	
+	.end:
 	popa
 ret
 

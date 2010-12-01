@@ -92,7 +92,7 @@ jmp	ContinueC
 omg db 'THIS',0
 omg2 db 'IS  ',0
 omg3 db 'SPARTA!',0
-hangMsg db 'hang',0
+hangMsg db 2,'hang',1,0
 ISRDiv0:
 	pusha
 	mov	ebx, MSGDiv0

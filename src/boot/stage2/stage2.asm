@@ -16,10 +16,9 @@ stage2:
 push	cs
 pop	ds
 ;Print Boot Messages
-call	ProgressStep
-call	MoveClear
 mov	bx, MSGPmode
 call	Print
+call	ProgressStep
 
 cli
 call	LoadGDT
@@ -29,8 +28,9 @@ mov	cr0,eax
 jmp	8h:pmode
 
 ;Hang
-call	MoveFail
 mov	bx, MSGFail
+call	Print
+mov	bx, MSGEnd
 call	Print
 cli
 hlt
@@ -51,52 +51,27 @@ Print:
 .end:
 ret
 
-MoveClear:
-	mov	ah, 2
-	xor	bh, bh
-	mov	dx, 0301h
-	int	10h
-	mov	bx, MSGNone
-	call	Print
-	mov	ah, 2
-	xor	bh, bh
-	mov	dx, 0301h
-	int	10h
-ret
-MoveFail:
-	mov	ah, 2
-	xor	bh, bh
-	mov	dx, 0314h
-	int	10h
-ret
 ProgressStep:
-	mov	ah, 2
-	xor	bh, bh
-	mov	dx, 0101h
-	add	dl, [Prog]
-	int	10h
-	mov	ah, 0eh
-	mov	al, [CHRProg]
-	int	10h
-	inc	byte [Prog]
+	mov	bx, MSGDone
+	call	Print
+	mov	bx, MSGEnd
+	call	Print
 ret
 
 LoadError:
-	call	MoveFail
 	mov	bx, MSGFail
+	call	Print
+	mov	bx, MSGEnd
 	call	Print
 	cli
 	hlt
 
 %include 'gdt.asm'
 
-Prog	db 2h
-
-MSGNone	times 28 db 20h
-		db 0h
-MSGPmode	db "Entering pmode", 0h
-MSGFail		db " ..failed",0h
-CHRProg		db 0DBh
+MSGPmode	db "Entering pmode.....[", 0h
+MSGFail		db "FAIL",0h
+MSGDone		db "DONE",0h
+MSGEnd		db "]",13d,10d,0
 
 %include 'stage2pmode.asm'
 

@@ -27,9 +27,6 @@ int	10h
 ;int 10h
 
 ;Print Boot Messages
-mov	bx, Window
-call	Print
-call	MoveClear
 mov	bx, MSGBoot
 call	Print
 
@@ -47,9 +44,9 @@ int	13h
 jc	LoadError
 call	ProgressStep
 
-call	MoveClear
 mov	bx, MSGVrfy
 call	Print
+
 call	Stage2Verify
 call	ProgressStep
 
@@ -59,54 +56,22 @@ jmp 1000h:0000h
 Print:
 	;Print NULL-termiated string
 	mov	ah, 0eh
-	PrintNext:
+	.next:
 	mov	al, [cs:bx]
 	cmp	al,0
-	je	PrintEnd
+	je	.end
 		int	10h
 		inc	bx
-	jmp	PrintNext
+	jmp	.next
 	;End
-PrintEnd:
+.end:
 ret
 
-MoveClear:
-	mov	ah, 2
-	xor	bh, bh
-	mov	dx, 0301h
-	int	10h
-	mov	bx, MSGNone
-	call	Print
-	mov	ah, 2
-	xor	bh, bh
-	mov	dx, 0301h
-	int	10h
-ret
-MoveFail:
-	mov	ah, 2
-	xor	bh, bh
-	mov	dx, 0314h
-	int	10h
-ret
 ProgressStep:
-	push	ax
-	push	bx
-	push	cx
-	push	dx
-	mov	ah, 2
-	xor	bh, bh
-	mov	dx, 0101h
-	add	dl, [Prog]
-	int	10h
-	mov	ah, 0eh
-	mov	al, [CHRProg]
-	int	10h
-	inc	byte [Prog]
-	pop	dx
-	pop	cx
-	pop	bx
-	pop	ax
-	
+	mov	bx, MSGDone
+	call	Print
+	mov	bx, MSGEnd
+	call	Print
 ret
 
 Stage2Verify:
@@ -114,18 +79,19 @@ Stage2Verify:
 	mov	es, bx
 	mov	bx, SIGstg2+8d
 	mov	cx, 8
-	VerifyLoop:
+	.l1:
 		mov	si, cx
 		mov	ah, [es:si]
 		cmp	ah, [cs:bx]
 		jne	LoadError
 		dec	bx
-	loop	VerifyLoop
+	loop	.l1
 ret
 
 LoadError:
-	call	MoveFail
 	mov	bx, MSGFail
+	call	Print
+	mov	bx, MSGEnd
 	call	Print
 	cli
 	hlt
@@ -137,35 +103,12 @@ BDrive	db 0h	;Drive number for stage2
 BHead	db 0h	;Head number for stage2
 BSize	db 18d	;Size of stage2 in sectors
 
-Prog	db 0h
+MSGBoot	db "Loading stage2.....[", 0h
+MSGVrfy	db "Verifying stage2...[", 0h
+MSGFail	db "FAIL",0h
+MSGDone	db "DONE",0h
+MSGEnd	db "]",13d,10d,0
 
-Window	db 0C9h
-	db 0CDh, 0B9h, "OGRP-OS", 0CCh
-	times 18 db 0CDh
-	db 0BBh, 0Ah, 0Dh
-	
-	db 0BAh
-	times 28 db 20h
-	db 0BAh, 0Ah, 0Dh
-	
-	db 0CCh
-	times 28 db 0CDh
-	db 0B9h, 0Ah, 0Dh
-	
-	db 0BAh
-	times 28 db 20h
-	db 0BAh, 0Ah, 0Dh
-	
-	db 0C8h
-	times 28 db 0CDh
-	db 0BCh, 0Ah, 0Dh, 0h
-
-MSGNone	times 28 db 20h
-	db 0h
-MSGBoot	db "Loading stage2", 0h
-MSGVrfy	db "Verifying stage2", 0h
-MSGFail	db " ..failed",0h
-CHRProg	db 0DBh
 SIGstg2	db 0E9h, 06h, 0h, "STAGE2" 
 
 ; Boot Sector 512 bytes big + boot signature
