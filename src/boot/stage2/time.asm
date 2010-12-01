@@ -1,11 +1,11 @@
 [bits 32]
 sleep:
 	pushf
-	mov	[ds:TimerSemaphore], eax
+	mov	[ds:timer_semaphore], eax
 	sti
 	.loop:
 		hlt
-		cmp	dword [ds:TimerSemaphore], 0
+		cmp	dword [ds:timer_semaphore], 0
 	jne	.loop
 	popf
 ret
@@ -13,7 +13,7 @@ ret
 timer_setup:
 	pushf
 	mov	eax, 28h
-	mov	ebx, ISRTimer
+	mov	ebx, timer_isr
 	call	RegisterISR
 	in	al, 0A1h
 	and	al, 0FEh
@@ -31,11 +31,11 @@ timer_setup:
 	popf
 ret
 
-ISRTimer:
+timer_isr:
 	pusha
-	cmp	dword [ds:TimerSemaphore], 0
+	cmp	dword [ds:timer_semaphore], 0
 	je	.end
-		dec	dword [ds:TimerSemaphore]
+		dec	dword [ds:timer_semaphore]
 	.end:
 	mov	al, 0Ch
 	out	70h, al
@@ -45,4 +45,4 @@ ISRTimer:
 	out	0A0h, al
 	popa
 iret
-TimerSemaphore	dd 0
+timer_semaphore	dd 0

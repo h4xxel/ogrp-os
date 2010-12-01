@@ -81,7 +81,7 @@ lollol:
 	add edi, 2
 loop	lollol
 
-mov	ebx, hangMsg
+mov	ebx, msg_hang
 mov	edx, 240h
 mov	ah, 03h
 call	print32
@@ -92,7 +92,7 @@ jmp	ContinueC
 omg db 'THIS',0
 omg2 db 'IS  ',0
 omg3 db 'SPARTA!',0
-hangMsg db 2,'hang',1,0
+msg_hang db 2,'hang',1,0
 ISRDiv0:
 	pusha
 	mov	ebx, MSGDiv0
