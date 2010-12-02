@@ -130,19 +130,15 @@ floppy_calibrate:
 		cmp	[floppy_cyl], byte 0
 		je	.end
 	loop	.calibrate_loop
-	xor	edx, edx
 	mov	ah, 04h
-	mov	ebx, floppy_calibrate_error
-	call	print32
+	mov	ebx, MSGFail
+	call	print
+	mov	ah, 07h
+	mov	ebx, MSGEnd
+	call	print
 .end:
 call	floppy_motor_off
-mov	ah, 02h
-mov	ebx, floppy_calibrate_done
-call	print32
 ret
-
-floppy_calibrate_error	db 'Floppy Calibration Error', 13d, 10d, 0
-floppy_calibrate_done	db 'Floppy Calibration Success', 13d, 10d, 0
 
 floppy_motor_on:
 	mov	dx, floppy_reg_base+floppy_reg_DOR
@@ -180,17 +176,9 @@ floppy_seek:
 	call	floppy_check_interrupt
 	
 	call	floppy_motor_off
-	
-	xor	dx, dx
-	mov	ah, 02h
-	mov	ebx, seeksuccess
-	call	print32
-	
-	.end:
-	popa
+.end:
+popa
 ret
-
-seeksuccess db "Seek Success", 13d, 10d, 0
 
 floppy_dma_init_read:
 	mov	al, 6h
@@ -215,14 +203,7 @@ floppy_dma_init_read:
 	out	0bh, al	;read
 	mov	al, 2h
 	out	0ah, al	;unmask chanel 2
-	
-	mov	dx, 32d
-	mov	ah, 02h
-	mov	ebx, dmasuccess
-	call	print32
 ret
-
-dmasuccess db "DMA Success", 13d, 10d, 0
 
 floppy_track_read:
 	; CH: cylinder
@@ -287,20 +268,31 @@ floppy_detect_drive:
 	push	ax
 	shr	al, 4
 	mul	ah
-	mov	bx, floppy_drive_types
+	push	eax
+	mov	ah, 03h
+	mov	ebx, floppy_msg_primary_drive
+	call	print
+	mov	ebx, floppy_drive_types
+	pop	eax
 	add	ebx, eax
-	mov	edx, 800d
-	mov	ah, 04h
-	call	print32
+	mov	ah, 03h
+	call	print
 	pop	ax
 	and	al, 0Fh
 	mul	ah
-	mov	bx, floppy_drive_types
+	push	eax
+	mov	ah, 03h
+	mov	ebx, floppy_msg_secondary_drive
+	call	print
+	mov	ebx, floppy_drive_types
+	pop	eax
 	add	ebx, eax
-	mov	edx, 960d
-	mov	ah, 04h
-	call	print32
+	mov	ah, 03h
+	call	print
 ret
+
+floppy_msg_primary_drive	db	"    Primary drive:   ", 0
+floppy_msg_secondary_drive	db	"    Secondary drive: ", 0
 
 floppy_drive_types:
 	db	'NONE', 13d, 10d, 0,0,0,0,0,0,0, 0h

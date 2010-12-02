@@ -28,9 +28,11 @@ int	10h
 
 ;Print Boot Messages
 mov	bx, MSGVer
-call	Print
+mov	ah, 07h
+call	print16
 mov	bx, MSGBoot
-call	Print
+mov	ah, 07h
+call	print16
 
 mov	ah, 02		; BIOS drive load function
 mov	al, [BSize]	; Number of sectors to read
@@ -47,7 +49,8 @@ jc	LoadError
 call	ProgressStep
 
 mov	bx, MSGVrfy
-call	Print
+mov	ah, 07h
+call	print16
 
 call	Stage2Verify
 call	ProgressStep
@@ -55,25 +58,79 @@ call	ProgressStep
 
 jmp 1000h:0000h
 
-Print:
-	;Print NULL-termiated string
-	mov	ah, 0eh
+print16:
+	; Print NULL-termiated string
+	; ebx	string pointer
+	; ah	attribute
+	mov	di, [cursor_pos]
+	mov	dx, 0B800h
+	mov	es, dx
 	.next:
-	mov	al, [cs:bx]
+	mov	al, [bx]
 	cmp	al,0
 	je	.end
-		int	10h
+	cmp	al, 10d
+	jne	.check_cr
+		;Line Break
+		add	di, 0A0h
+		inc	bx
+		jmp	.next
+	.check_cr:
+	cmp	al, 13d
+	jne	.print
+		call	carriage_return
+		inc	bx
+		jmp	.next
+	.print:
+		mov	[es:di], ax
+		add	di, 2
 		inc	bx
 	jmp	.next
-	;End
 .end:
+mov	[cursor_pos], di
+call	update_hw_cursor
+ret
+
+carriage_return:
+	push	ax
+	mov	ax, di
+	xor	dx, dx
+	mov	cx, 0A0h
+	div	cx
+	mul	cx
+	mov	di, ax
+	pop	ax
+ret
+
+cursor_pos	dw 0
+
+update_hw_cursor:
+	mov	ax, [cursor_pos]
+	xor	dx, dx
+	mov	cx, 2
+	div	cx
+	mov	cx, ax
+	mov	dx, 3D4h
+	mov	al, 0Fh
+	out	dx, al
+	inc	dx
+	mov	al, cl
+	out	dx, al
+	dec	dx
+	mov	al, 0Eh
+	out	dx, al
+	inc	dx
+	mov	al, ch
+	out	dx, al
 ret
 
 ProgressStep:
+	mov	ah, 02h
 	mov	bx, MSGDone
-	call	Print
+	call	print16
 	mov	bx, MSGEnd
-	call	Print
+	mov	ah, 07h
+	call	print16
 ret
 
 Stage2Verify:
@@ -92,9 +149,11 @@ ret
 
 LoadError:
 	mov	bx, MSGFail
-	call	Print
+	mov	ah, 04h
+	call	print16
 	mov	bx, MSGEnd
-	call	Print
+	mov	ah, 07h
+	call	print16
 	cli
 	hlt
 
@@ -106,8 +165,8 @@ BHead	db 0h	;Head number for stage2
 BSize	db 18d	;Size of stage2 in sectors
 
 MSGVer	db "OGRP Operating System version 0.1", 13d, 10d, 13d, 10d, 0
-MSGBoot	db "Loading stage2.....[", 0h
-MSGVrfy	db "Verifying stage2...[", 0h
+MSGBoot	db "Loading stage2.........[", 0h
+MSGVrfy	db "Verifying stage2.......[", 0h
 MSGFail	db "FAIL",0h
 MSGDone	db "DONE",0h
 MSGEnd	db "]",13d,10d,0

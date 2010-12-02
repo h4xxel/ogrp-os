@@ -16,6 +16,10 @@ mov	eax, 10h
 mov	es, ax
 mov	ss, ax
 
+mov	ebx, msg_interrupts
+mov	ah, 07h
+call	print
+
 call	RemapPIC
 call	LoadIDT
 
@@ -31,41 +35,42 @@ register_dummy:
 	inc	ax
 loop	register_dummy
 
+mov	ebx, MSGDone
+mov	ah, 02h
+call	print
+mov	ebx, MSGEnd
+mov	ah, 07h
+call	print
+
+mov	ebx, msg_timer
+mov	ah, 07h
+call	print
+
 call	timer_setup
 
-call	floppy_detect_drive
-
-mov	eax, 1024d
-call	sleep
-
-mov	ebx, omg
-mov	ah, 1
-xor	edx, edx
-call	print32
-
-mov	eax, 1024d
-call	sleep
-
-mov	ebx, omg2
-mov	ah, 1
-call	print32
-
-mov	eax, 1024d
-call	sleep
-
-mov	ebx, omg3
-mov	ah, 1
-call	print32
+mov	ebx, MSGDone
+mov	ah, 02h
+call	print
+mov	ebx, MSGEnd
+mov	ah, 07h
+call	print
 
 ;xor	ax, ax
 ;div	ax		;Test divide by zero handler
 
+mov	ebx, msg_floppy
+mov	ah, 07h
+call	print
+
 call	floppy_driver_init
 call	floppy_controller_reset
-mov	ebx, resetdone
-mov	ah, 1
-xor	edx, edx
-call	print32
+mov	ebx, MSGDone
+mov	ah, 02h
+call	print
+mov	ebx, MSGEnd
+mov	ah, 07h
+call	print
+call	floppy_detect_drive
 mov	ch, 0
 call	floppy_track_read
 
@@ -75,34 +80,51 @@ mov	edi, 0B8000h
 add edi, 80*2*16
 mov	cx, 21d
 
-mov	ecx, 15d
+mov	ecx, 1d
 omgloop:
-	mov	eax, 512d
+	push	ecx
+	mov	eax, 256d
+	call	sleep
+	mov	ebx, omg
+	mov	ah, 1
+	call	print
+	
+	mov	eax, 256d
+	call	sleep
+	mov	ebx, omg2
+	mov	ah, 1
+	call	print
+	
+	mov	eax, 256d
 	call	sleep
 	mov	ebx, omg3
 	mov	ah, 1
-	call	print32
+	call	print
+	pop	ecx
 loop omgloop
 
-lollol:
-	mov	al, [es:ebx]
-	mov	[es:edi], ax
-	inc ebx
-	add edi, 2
-loop	lollol
+
+; lollol:
+	; mov	al, [es:ebx]
+	; mov	[es:edi], ax
+	; inc ebx
+	; add edi, 2
+; loop	lollol
 
 mov	ebx, msg_hang
 mov	edx, 240h
 mov	ah, 03h
-call	print32
+call	print
 jmp	$
-resetdone db "reset done", 13d, 10d, 0
 
 jmp	ContinueC
 omg db 'THIS', 13d, 10d, 0
 omg2 db 'IS', 13d, 10d, 0
 omg3 db 'SPARTA!', 13d, 10d, 0
 msg_hang db 'hang',0
+msg_floppy	db "Initializing floppy....[", 0h
+msg_interrupts	db "Setting up interrupts..[", 0h
+msg_timer	db "Setting up timer.......[", 0h
 ISRDiv0:
 	pusha
 	mov	ebx, MSGDiv0
@@ -120,7 +142,7 @@ io_wait:
 	pop	cx
 ret
 
-print32:
+print:
 	; Print NULL-termiated string
 	; ebx	string pointer
 	; ah	attribute
@@ -163,6 +185,7 @@ line_break:
 ret
 
 carriage_return:
+	push	ax
 	mov	edx, edi
 	sub	edx, 0B8000h
 	mov	ax, dx
@@ -174,6 +197,7 @@ carriage_return:
 	shl	edi, 16
 	mov	di, ax
 	add	edi, 0B8000h
+	pop	ax
 ret
 
 scroll_down:
@@ -187,6 +211,11 @@ scroll_down:
 		add	edi, 4
 		add	esi, 4
 	loop	.l1
+	mov	cx, 40
+	.l2:
+		mov	[es:edi], dword 0
+		add	edi, 4
+	loop	.l2
 	popa
 ret
 
@@ -217,10 +246,10 @@ panic:
 	push	ebx
 	xor	edx, edx
 	mov	ebx, MSGPanic
-	call	print32
+	call	print
 	pop	ebx
 	mov	edx, 0Eh
-	call	print32
+	call	print
 	cli
 	hlt
 	jmp	$

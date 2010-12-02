@@ -17,7 +17,8 @@ push	cs
 pop	ds
 ;Print Boot Messages
 mov	bx, MSGPmode
-call	Print
+mov	ah, 07h
+call	print16
 call	ProgressStep
 
 cli
@@ -28,47 +29,100 @@ mov	cr0,eax
 jmp	8h:pmode
 
 ;Hang
-mov	bx, MSGFail
-call	Print
-mov	bx, MSGEnd
-call	Print
+call	LoadError
 cli
 hlt
 jmp	$
 
 
-Print:
-	;Print NULL-termiated string
-	mov	ah, 0eh
+print16:
+	; Print NULL-termiated string
+	; ebx	string pointer
+	; ah	attribute
+	mov	di, [cursor_pos16]
+	mov	dx, 0B800h
+	mov	es, dx
 	.next:
-	mov	al, [cs:bx]
+	mov	al, [bx]
 	cmp	al,0
 	je	.end
-		int	10h
+	cmp	al, 10d
+	jne	.check_cr
+		;Line Break
+		add	di, 0A0h
+		inc	bx
+		jmp	.next
+	.check_cr:
+	cmp	al, 13d
+	jne	.print
+		call	carriage_return16
+		inc	bx
+		jmp	.next
+	.print:
+		mov	[es:di], ax
+		add	di, 2
 		inc	bx
 	jmp	.next
-	;End
 .end:
+mov	[cursor_pos16], di
+call	update_hw_cursor16
+ret
+
+carriage_return16:
+	push	ax
+	mov	ax, di
+	xor	dx, dx
+	mov	cx, 0A0h
+	div	cx
+	mul	cx
+	mov	di, ax
+	pop	ax
+ret
+
+cursor_pos16	dw (0A0h*4)
+
+update_hw_cursor16:
+	mov	ax, [cursor_pos16]
+	xor	dx, dx
+	mov	cx, 2
+	div	cx
+	mov	cx, ax
+	mov	dx, 3D4h
+	mov	al, 0Fh
+	out	dx, al
+	inc	dx
+	mov	al, cl
+	out	dx, al
+	dec	dx
+	mov	al, 0Eh
+	out	dx, al
+	inc	dx
+	mov	al, ch
+	out	dx, al
 ret
 
 ProgressStep:
+	mov	ah, 02h
 	mov	bx, MSGDone
-	call	Print
+	call	print16
 	mov	bx, MSGEnd
-	call	Print
+	mov	ah, 07h
+	call	print16
 ret
 
 LoadError:
 	mov	bx, MSGFail
-	call	Print
+	mov	ah, 04h
+	call	print16
 	mov	bx, MSGEnd
-	call	Print
+	mov	ah, 07h
+	call	print16
 	cli
 	hlt
 
 %include 'gdt.asm'
 
-MSGPmode	db "Entering pmode.....[", 0h
+MSGPmode	db "Entering pmode.........[", 0h
 MSGFail		db "FAIL",0h
 MSGDone		db "DONE",0h
 MSGEnd		db "]",13d,10d,0
