@@ -19,7 +19,7 @@ void 		/* Update hardware cursor to new position */
 ckcur_update(void) {
 	uint16_t param = (uint16_t) (cursor_p.x + (cursor_p.y * 80));
 
-	out(0x3D, 0x0F);
+	out(0x3D4, 0x0F);
 	out(0x3D5, (uint8_t) (param & 0xff));
 
 	out(0x3D4, 0x0E9);

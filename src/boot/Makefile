@@ -1,21 +1,8 @@
-FILENAME	= image.img
+MAKEFLAGS += --no-print-directory
 
 .PHONY: all clean
 
 all: stage2
-
-test: stage2
-	touch $(FILENAME)
-	rm $(FILENAME)
-	@echo " [ APPEND ]	stage1/boot > $(FILENAME)"
-	@cat stage1/boot >> $(FILENAME)
-	@echo " [ APPEND ]	stage2/stage2 > $(FILENAME)"
-	@cat stage2/stage2 >> $(FILENAME)
-	@echo " [ APPEND ]	../ckernel/ckernel-bin >> $(FILENAME)"
-	@cat arst >> $(FILENAME)
-	@echo " Done. Your image is located at:"
-	@echo " src/boot/$(FILENAME)"
-	@echo
 
 clean:
 	@echo " [ CLEANING ]"
@@ -29,4 +16,4 @@ boot:
 
 stage2: boot
 	@$(MAKE) -C stage2/
-	nasm -o arst arst.asm
+	@nasm -o arst arst.asm

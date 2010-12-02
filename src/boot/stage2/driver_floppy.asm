@@ -90,7 +90,7 @@ floppy_read_command:
 	in	al, dx	;Read FIFO
 ret
 
-floppy_cmd_error	db 'error in floppy subsystem'
+floppy_cmd_error	db 'error in floppy subsystem', 13d, 10d, 0
 
 floppy_controller_reset:
 	xor	al, al
@@ -141,8 +141,8 @@ mov	ebx, floppy_calibrate_done
 call	print32
 ret
 
-floppy_calibrate_error	db 'Floppy Calibration Error',0
-floppy_calibrate_done	db 'Floppy Calibration Success',0
+floppy_calibrate_error	db 'Floppy Calibration Error', 13d, 10d, 0
+floppy_calibrate_done	db 'Floppy Calibration Success', 13d, 10d, 0
 
 floppy_motor_on:
 	mov	dx, floppy_reg_base+floppy_reg_DOR
@@ -190,7 +190,7 @@ floppy_seek:
 	popa
 ret
 
-seeksuccess db "Seek Success",0
+seeksuccess db "Seek Success", 13d, 10d, 0
 
 floppy_dma_init_read:
 	mov	al, 6h
@@ -222,7 +222,7 @@ floppy_dma_init_read:
 	call	print32
 ret
 
-dmasuccess db "DMA Success",0
+dmasuccess db "DMA Success", 13d, 10d, 0
 
 floppy_track_read:
 	; CH: cylinder
@@ -283,7 +283,7 @@ floppy_detect_drive:
 	out	70h, al
 	call	io_wait
 	in	al, 71h
-	mov	ah, 12d
+	mov	ah, 14d
 	push	ax
 	shr	al, 4
 	mul	ah
@@ -303,14 +303,14 @@ floppy_detect_drive:
 ret
 
 floppy_drive_types:
-	db	'NONE       ', 0h
-	db	'5.25" 360kB', 0h
-	db	'5.25" 1.2MB', 0h
-	db	'3.5" 720kB ', 0h
-	db	'3.5" 1.44MB', 0h
-	db	'3.5" 2.88MB', 0h
-	db	'UNKNOWN    ', 0h
-	db	'UNKNOWN    ', 0h
+	db	'NONE', 13d, 10d, 0,0,0,0,0,0,0, 0h
+	db	'5.25" 360kB', 13d, 10d, 0h
+	db	'5.25" 1.2MB', 13d, 10d, 0h
+	db	'3.5" 720kB', 13d, 10d, 0, 0h
+	db	'3.5" 1.44MB', 13d, 10d, 0h
+	db	'3.5" 2.88MB', 13d, 10d, 0h
+	db	'UNKNOWN', 13d, 10d, 0,0,0,0, 0h
+	db	'UNKNOWN', 13d, 10d, 0,0,0,0, 0h
 
 floppy_reg_base	equ	03f0h
 

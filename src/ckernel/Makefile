@@ -1,3 +1,4 @@
+MAKEFLAGS += --no-print-directory
 AS = nasm
 CC = gcc
 LD = ld
@@ -18,14 +19,14 @@ FILENAME	= ckernel-bin
 .PHONY: all clean
 
 all: $(OBJFILES)
-	@echo " [ LINKING ]	$(OBJFILES)"
+	@echo " [ LD ]	$(OBJFILES)"
 	@$(LD) $(LDFLAGS) -o $(FILENAME) $(OBJFILES)
 	@echo " Done. Your kernel binary is located at:"
 	@echo " src/ckernel/$(FILENAME)"
 	@echo
 
 clean:
-	@echo " [ CLEANING ]"
+	@echo " [ CLEAN ]"
 	@echo " Objectfiles:	$(OBJFILES)"
 	@echo " Binaries:	$(FILENAME)"
 	@rm $(OBJFILES)

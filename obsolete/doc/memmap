@@ -1,0 +1,20 @@
+ -----------------------------------------------------------------------
+| 			      OGRP-OS MemMap				|
+|			  ***********************			|
+|									|
+|			    Av: Mr3D 2009-08-01				|
+|									|
+|				Version 0.1				|
+ -----------------------------------------------------------------------
+
+Memmory Map
+OGRP-OS
+
+Segment: (hex)
+0000-07c0	BIOS Reserved
+07c0-07e0	Boot Sector
+07e0-0800	Kernel Interrupt Stack Space
+0800-0f00	File System Temp Space (Kernel reads file table here for processing)
+0f00-1000	Kernel Settings and Variable space
+1000-1200	Kernel
+1200-FFFF	Program Memory

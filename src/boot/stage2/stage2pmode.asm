@@ -86,13 +86,13 @@ mov	edx, 240h
 mov	ah, 03h
 call	print32
 jmp	$
-resetdone db "reset done",0
+resetdone db "reset done", 13d, 10d, 0
 
 jmp	ContinueC
-omg db 'THIS',0
-omg2 db 'IS  ',0
-omg3 db 'SPARTA!',0
-msg_hang db 2,'hang',1,0
+omg db 'THIS', 13d, 10d, 0
+omg2 db 'IS', 13d, 10d, 0
+omg3 db 'SPARTA!', 13d, 10d, 0
+msg_hang db 'hang',0
 ISRDiv0:
 	pusha
 	mov	ebx, MSGDiv0
@@ -114,20 +114,70 @@ print32:
 	; Print NULL-termiated string
 	; ebx	string pointer
 	; ah	attribute
-	; edx	screen offset (160*line)+(col*2)
-	mov	edi, 0B8000h
-	add	edi, edx
+	mov	edi, [cursor_pos]
+	;add	edi, edx
 	.next:
 	mov	al, [ds:ebx]
 	cmp	al,0
 	je	.end
+	cmp	al, 10d
+	jne	.check_cr
+		;Line Break
+		add	edi, 0A0h
+		inc	ebx
+		jmp	.next
+	.check_cr:
+	cmp	al, 13d
+	jne	.print
+		call	carriage_return
+		inc	ebx
+		jmp	.next
+	.print:
 		mov	[es:edi], ax
 		add	edi, 2
 		inc	ebx
 	jmp	.next
-	;End
 .end:
+mov	[cursor_pos], edi
+call	update_hw_cursor
 ret
+
+carriage_return:
+	mov	edx, edi
+	sub	edx, 0B8000h
+	mov	ax, dx
+	shr	edx, 16
+	mov	cx, 0A0h
+	div	cx
+	mul	cx
+	mov	di, dx
+	shl	edi, 16
+	mov	di, ax
+	add	edi, 0B8000h
+ret
+
+update_hw_cursor:
+	mov	edx, [cursor_pos]
+	sub	edx, 0B8000h
+	mov	ax, dx
+	shr	edx, 16
+	mov	cx, 2
+	div	cx
+	mov	cx, ax
+	mov	dx, 3D4h
+	mov	al, 0Fh
+	out	dx, al
+	inc	dx
+	mov	al, cl
+	out	dx, al
+	dec	dx
+	mov	al, 0Eh
+	out	dx, al
+	inc	dx
+	mov	al, ch
+	out	dx, al
+ret
+cursor_pos dd 0B8320h
 
 panic:
 	push	ebx

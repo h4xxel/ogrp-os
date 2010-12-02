@@ -27,6 +27,8 @@ int	10h
 ;int 10h
 
 ;Print Boot Messages
+mov	bx, MSGVer
+call	Print
 mov	bx, MSGBoot
 call	Print
 
@@ -103,6 +105,7 @@ BDrive	db 0h	;Drive number for stage2
 BHead	db 0h	;Head number for stage2
 BSize	db 18d	;Size of stage2 in sectors
 
+MSGVer	db "OGRP Operating System version 0.1", 13d, 10d, 13d, 10d, 0
 MSGBoot	db "Loading stage2.....[", 0h
 MSGVrfy	db "Verifying stage2...[", 0h
 MSGFail	db "FAIL",0h
