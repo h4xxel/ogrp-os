@@ -74,6 +74,16 @@ mov	ah, 06h
 mov	edi, 0B8000h
 add edi, 80*2*16
 mov	cx, 21d
+
+mov	ecx, 15d
+omgloop:
+	mov	eax, 512d
+	call	sleep
+	mov	ebx, omg3
+	mov	ah, 1
+	call	print32
+loop omgloop
+
 lollol:
 	mov	al, [es:ebx]
 	mov	[es:edi], ax
@@ -123,7 +133,7 @@ print32:
 	cmp	al, 10d
 	jne	.check_cr
 		;Line Break
-		add	edi, 0A0h
+		call	line_break
 		inc	ebx
 		jmp	.next
 	.check_cr:
@@ -142,6 +152,16 @@ mov	[cursor_pos], edi
 call	update_hw_cursor
 ret
 
+line_break:
+	cmp	edi, (0B8000h+(0A0h*24d))
+	jb	.move
+		call	scroll_down
+		jmp	.end
+	.move:
+	add	edi, 0A0h
+.end:
+ret
+
 carriage_return:
 	mov	edx, edi
 	sub	edx, 0B8000h
@@ -154,6 +174,20 @@ carriage_return:
 	shl	edi, 16
 	mov	di, ax
 	add	edi, 0B8000h
+ret
+
+scroll_down:
+	pusha
+	mov	edi, 0B8000h
+	mov	esi, (0B8000h+0A0h)
+	mov	ecx, (80*24)/2
+	.l1:
+		mov	eax, [es:esi]
+		mov	[es:edi], eax
+		add	edi, 4
+		add	esi, 4
+	loop	.l1
+	popa
 ret
 
 update_hw_cursor:

@@ -76,4 +76,4 @@ MSGEnd		db "]",13d,10d,0
 %include 'stage2pmode.asm'
 
 ; Just make it fill a whole sector
-times 2048 - ($ - $$) nop
+times 2560 - ($ - $$) nop
