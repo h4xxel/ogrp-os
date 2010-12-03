@@ -151,7 +151,7 @@ print:
 		mov	[es:edi], ax
 		add	edi, 2
 		inc	ebx
-		cmp	edi, (0B8000h+(0A0h*25d))
+		;cmp	edi, (0B8000h+(0A0h*25d))
 	jmp	.next
 .end:
 mov	[cursor_pos], edi
@@ -163,7 +163,7 @@ print_int:
 	; ebx	int
 	; ah	attribute
 	; ecx	base
-	mov	esi, [print_int_buf_end]
+	mov	esi, print_int_buf_end
 	mov	edx, ebx
 	mov	bh, ah
 	mov	eax, edx
@@ -174,6 +174,7 @@ print_int:
 		mov	bl, dl
 		cmp	bl, 9
 		jna	.d
+			; For numbers with a base higher than 10
 			add bl, 7
 		.d:
 		add	bl, 30h
@@ -183,20 +184,10 @@ print_int:
 	cmp	ax, 0
 	jne	.next
 	mov	edi, [cursor_pos]
-	.print:
-		;Make sure we don't overflow
-		cmp	edi, (0B8000h+(0A0h*25d))
-		jb .normal
-			call	scroll_down
-			sub	edi, 0A0h
-		.normal:
-		mov	bl, [esi]
-		cmp	bl, 0
-		je	.end
-		mov	[es:edi], bx
-		add	edi, 2
-		inc	esi
-	jmp	.print
+
+	mov	ah, bh
+	mov	ebx, esi
+	call	print
 .end:
 mov	[cursor_pos], edi
 call	update_hw_cursor
@@ -235,7 +226,7 @@ scroll_down:
 	pusha
 	mov	edi, 0B8000h
 	mov	esi, (0B8000h+0A0h)
-	mov	ecx, (80*24)/2
+	mov	ecx, ((80*24)/2)
 	.l1:
 		mov	eax, [es:esi]
 		mov	[es:edi], eax
@@ -251,6 +242,7 @@ scroll_down:
 ret
 
 update_hw_cursor:
+	pusha
 	mov	edx, [cursor_pos]
 	sub	edx, 0B8000h
 	mov	ax, dx
@@ -270,6 +262,7 @@ update_hw_cursor:
 	inc	dx
 	mov	al, ch
 	out	dx, al
+	popa
 ret
 cursor_pos dd 0B8320h
 

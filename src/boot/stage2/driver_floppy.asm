@@ -22,8 +22,7 @@ floppy_driver_init:
 ret
 
 floppy_isr:
-	pusha
-	
+	pusha	
 	mov	[floppy_ready], byte 1h
 	mov	al, 20h
 	out	20h, al
@@ -43,7 +42,8 @@ floppy_st0	db 0
 floppy_cyl	db 0
 
 floppy_issue_command:
-; AH=Command
+	; ah	Command
+	
 	pusha
 	push	ax
 	mov	ecx, 300d
@@ -70,7 +70,8 @@ floppy_issue_command:
 ret
 
 floppy_read_command:
-; Returns AL=return data
+	; Returns:
+	;	al	return data
 	mov	ecx, 300d
 	.test_rqm:
 		mov	eax, 0Ah
@@ -155,10 +156,10 @@ floppy_motor_off:
 ret
 
 floppy_seek:
-	; CH=Cylinder
-	; CL=Sector
-	; DH=Head
-	; DL=Drive
+	; ch	Cylinder
+	; cl	Sector
+	; dh	Head
+	; dl	Drive
 	pusha
 	call	floppy_motor_on
 	

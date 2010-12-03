@@ -117,7 +117,7 @@ omgloop:
 	pop	ecx
 loop omgloop
 
-
+; Copying some stuff from floppy dma buffer to framebuffer, just for checking that the floppy driver is working
 ; lollol:
 	; mov	al, [es:ebx]
 	; mov	[es:edi], ax
@@ -152,6 +152,7 @@ prompt:
 		mov	ah, 07h
 		call	print
 jmp	.readchar
+
 
 buf_len	dw 0
 charbuf	db 0,0

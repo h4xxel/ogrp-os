@@ -173,6 +173,6 @@ msg_end		db "]",13d,10d,0
 
 sig_stage2	db 0E9h, 06h, 0h, "STAGE2" 
 
-; Boot Sector 512 bytes big + boot signature
+; Boot Sector 510 bytes big excluding boot signature
 times 510 - ($ - $$) db 0
 signature db 055h, 0AAh
