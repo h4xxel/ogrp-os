@@ -83,23 +83,24 @@ mov	cx, 21d
 mov	ecx, 1d
 omgloop:
 	push	ecx
-	mov	eax, 256d
-	call	sleep
 	mov	ebx, omg
-	mov	ah, 1
+	mov	ah, 0dh
 	call	print
-	
-	mov	eax, 256d
+	mov	eax, 1024d
 	call	sleep
+	
 	mov	ebx, omg2
-	mov	ah, 1
+	mov	ah, 0dh
 	call	print
-	
-	mov	eax, 256d
+	mov	eax, 1024d
 	call	sleep
+	
 	mov	ebx, omg3
-	mov	ah, 1
+	mov	ah, 0dh
 	call	print
+	mov	eax, 1024d
+	call	sleep
+	
 	pop	ecx
 loop omgloop
 

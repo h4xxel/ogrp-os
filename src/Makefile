@@ -11,7 +11,7 @@ clean_dirs:
 	@$(MAKE) -C boot/ clean
 
 make_dirs:
-	@echo " Building ckernel/"
-	@$(MAKE) -C ckernel/
+	#@echo " Building ckernel/"
+	#@$(MAKE) -C ckernel/
 	@echo " Building boot/"
 	@$(MAKE) -C boot/
