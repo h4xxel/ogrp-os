@@ -7,7 +7,7 @@
 ; * Copyright 2010 ogrp
 ; * License: see COPYING file	
 
-LoadGDT:
+gdt_load:
 	push	cs
 	pop	ds
 	lgdt	[ds:gdtr]

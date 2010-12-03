@@ -1,5 +1,5 @@
 [bits 32]
-LoadIDT:
+idt_load:
 	mov	edi, 12000h
 	mov	cx, 0FFFFh
 	.l1:
@@ -11,13 +11,13 @@ ret
 idtr	dw 0FFFFh
 	dd 12000h
 
-RegisterISR:
+isr_register:
 	; ebx: ISR linear address
 	; eax: Interrupt Number
 	push	ebx
 	push	eax
 	mov	edi, 12000h
-	mul	word [ds:IntSize]
+	mul	word [ds:int_size]
 	shl	dx, 16
 	or	ax, dx
 	add	edi, eax
@@ -35,26 +35,25 @@ RegisterISR:
 	pop	eax
 	pop	ebx
 ret
-IntSize	dw 8
+int_size	dw 8
 
-GetISR:
+isr_get:
 	nop
 ret
 
-UnhandledInterrupt:
+unhandled_int:
 	pusha
-	;mov	ebx, MSGUnhandled
-	;mov	ah, 07h
-	;xor	edx, edx
-	;call	print32
+	; mov	ebx, msg_unhandled
+	; mov	ah, 07h
+	; call	print
 	mov	al, 20h
 	out	20h, al
 	out	0Ah, al
 	popa
 iret
-MSGUnhandled	db "Unhandled Interrupt", 0
+msg_unhandled	db "Unhandled Interrupt", 13d, 10d, 0
 
-RemapPIC:
+pic_remap:
 	;Save IRQ masks
 	in	al, 021h
 	mov	ah, al

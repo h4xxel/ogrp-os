@@ -14,7 +14,7 @@ timer_setup:
 	pushf
 	mov	eax, 28h
 	mov	ebx, timer_isr
-	call	RegisterISR
+	call	isr_register
 	in	al, 0A1h
 	and	al, 0FEh
 	out	0A1h, al
@@ -46,3 +46,12 @@ timer_isr:
 	popa
 iret
 timer_semaphore	dd 0
+
+io_wait:
+	push	cx
+	mov	cx, 10h
+	.l1:
+		times	5 nop
+	loop	.l1
+	pop	cx
+ret

@@ -7,8 +7,8 @@
 ; * Copyright 2010 ogrp
 ; * License: see COPYING file									;
 
-[BITS 16]	; We are in realmode :)
-[ORG 7C00h]	; BIOS loads us to 0x0000:0x7c00
+[bits 16]	; We are in realmode :)
+[org 7C00h]	; BIOS loads us to 0x0000:0x7c00
 	
 ;Clear Screen
 mov	ax, 0700h
@@ -27,17 +27,17 @@ int	10h
 ;int 10h
 
 ;Print Boot Messages
-mov	bx, MSGVer
+mov	bx, msg_ver
 mov	ah, 07h
 call	print16
-mov	bx, MSGBoot
+mov	bx, msg_boot
 mov	ah, 07h
 call	print16
 
 mov	ah, 02		; BIOS drive load function
-mov	al, [BSize]	; Number of sectors to read
-mov	cx, [BSec]	; Read from cylinder 0 and Read from sector 2
-mov	dx, [BDrive]	; Read from head 0 and Read from floppy drive 0
+mov	al, [stage2_size]	; Number of sectors to read
+mov	cx, [stage2_sector]	; Read from cylinder 0 and Read from sector 2
+mov	dx, [stage2_drive]	; Read from head 0 and Read from floppy drive 0
 mov	bx, 1000h	;
 mov	es, bx		; Read to segment 0x1000
 xor	bx, bx		; And offset 0x0000
@@ -45,15 +45,15 @@ xor	bx, bx		; And offset 0x0000
 
 ; Load Stage 2
 int	13h
-jc	LoadError
-call	ProgressStep
+jc	load_error
+call	progress_step
 
-mov	bx, MSGVrfy
+mov	bx, msg_verify
 mov	ah, 07h
 call	print16
 
-call	Stage2Verify
-call	ProgressStep
+call	verify_stage2
+call	progress_step
 
 
 jmp 1000h:0000h
@@ -124,54 +124,54 @@ update_hw_cursor:
 	out	dx, al
 ret
 
-ProgressStep:
+progress_step:
 	mov	ah, 02h
-	mov	bx, MSGDone
+	mov	bx, msg_done
 	call	print16
-	mov	bx, MSGEnd
+	mov	bx, msg_end
 	mov	ah, 07h
 	call	print16
 ret
 
-Stage2Verify:
+verify_stage2:
 	mov	bx, 1000h
 	mov	es, bx
-	mov	bx, SIGstg2+8d
+	mov	bx, sig_stage2+8d
 	mov	cx, 8
 	.l1:
 		mov	si, cx
 		mov	ah, [es:si]
 		cmp	ah, [cs:bx]
-		jne	LoadError
+		jne	load_error
 		dec	bx
 	loop	.l1
 ret
 
-LoadError:
-	mov	bx, MSGFail
+load_error:
+	mov	bx, msg_fail
 	mov	ah, 04h
 	call	print16
-	mov	bx, MSGEnd
+	mov	bx, msg_end
 	mov	ah, 07h
 	call	print16
 	cli
 	hlt
 
-BData	db "BootData:"
-BSec	db 2h	;Sector number for stage2
-BCyl	db 0h	;Cylinder number for stage2
-BDrive	db 0h	;Drive number for stage2
-BHead	db 0h	;Head number for stage2
-BSize	db 18d	;Size of stage2 in sectors
+boot_data	db "BootData:"
+stage2_sector	db 2h	;Sector number for stage2
+stage2_cylinder	db 0h	;Cylinder number for stage2
+stage2_drive	db 0h	;Drive number for stage2
+stage2_head	db 0h	;Head number for stage2
+stage2_size	db 18d	;Size of stage2 in sectors
 
-MSGVer	db "OGRP Operating System version 0.1", 13d, 10d, 13d, 10d, 0
-MSGBoot	db "Loading stage2.........[", 0h
-MSGVrfy	db "Verifying stage2.......[", 0h
-MSGFail	db "FAIL",0h
-MSGDone	db "DONE",0h
-MSGEnd	db "]",13d,10d,0
+msg_ver		db "OGRP Operating System version 0.1", 13d, 10d, 13d, 10d, 0
+msg_boot	db "Loading stage2.........[", 0h
+msg_verify	db "Verifying stage2.......[", 0h
+msg_fail	db "FAIL",0h
+msg_done	db "DONE",0h
+msg_end		db "]",13d,10d,0
 
-SIGstg2	db 0E9h, 06h, 0h, "STAGE2" 
+sig_stage2	db 0E9h, 06h, 0h, "STAGE2" 
 
 ; Boot Sector 512 bytes big + boot signature
 times 510 - ($ - $$) db 0

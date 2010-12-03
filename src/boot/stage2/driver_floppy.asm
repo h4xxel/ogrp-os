@@ -13,15 +13,15 @@ ret
 
 floppy_driver_init:
 	mov	eax, 26h
-	mov	ebx, floppy_irq_handler
-	call	RegisterISR
+	mov	ebx, floppy_isr
+	call	isr_register
 	; Unmask IRQ
 	in	al, 021h
 	and	al, 10111111b
 	out	021h, al
 ret
 
-floppy_irq_handler:
+floppy_isr:
 	pusha
 	
 	mov	[floppy_ready], byte 1h
@@ -131,10 +131,10 @@ floppy_calibrate:
 		je	.end
 	loop	.calibrate_loop
 	mov	ah, 04h
-	mov	ebx, MSGFail
+	mov	ebx, msg_fail
 	call	print
 	mov	ah, 07h
-	mov	ebx, MSGEnd
+	mov	ebx, msg_end
 	call	print
 .end:
 call	floppy_motor_off

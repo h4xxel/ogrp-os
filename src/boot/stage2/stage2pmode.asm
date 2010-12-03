@@ -20,25 +20,25 @@ mov	ebx, msg_interrupts
 mov	ah, 07h
 call	print
 
-call	RemapPIC
-call	LoadIDT
+call	pic_remap
+call	idt_load
 
 mov	eax, 0h
-mov	ebx, ISRDiv0
-call	RegisterISR
+mov	ebx, isr_div0
+call	isr_register
 
 mov	eax, 1
-mov	ebx, UnhandledInterrupt
+mov	ebx, unhandled_int
 mov	cx, 30h
 register_dummy:
-	call	RegisterISR
+	call	isr_register
 	inc	ax
 loop	register_dummy
 
-mov	ebx, MSGDone
+mov	ebx, msg_done
 mov	ah, 02h
 call	print
-mov	ebx, MSGEnd
+mov	ebx, msg_end
 mov	ah, 07h
 call	print
 
@@ -48,10 +48,23 @@ call	print
 
 call	timer_setup
 
-mov	ebx, MSGDone
+mov	ebx, msg_done
 mov	ah, 02h
 call	print
-mov	ebx, MSGEnd
+mov	ebx, msg_end
+mov	ah, 07h
+call	print
+
+mov	ebx, msg_keyboard
+mov	ah, 07h
+call	print
+
+call	keyboard_setup
+
+mov	ebx, msg_done
+mov	ah, 02h
+call	print
+mov	ebx, msg_end
 mov	ah, 07h
 call	print
 
@@ -64,10 +77,10 @@ call	print
 
 call	floppy_driver_init
 call	floppy_controller_reset
-mov	ebx, MSGDone
+mov	ebx, msg_done
 mov	ah, 02h
 call	print
-mov	ebx, MSGEnd
+mov	ebx, msg_end
 mov	ah, 07h
 call	print
 call	floppy_detect_drive
@@ -112,155 +125,76 @@ loop omgloop
 	; add edi, 2
 ; loop	lollol
 
-mov	ebx, msg_hang
-mov	edx, 240h
-mov	ah, 03h
-call	print
+;Testing keyboard input :))
+prompt:
+	mov	ebx, msg_prompt
+	mov	ah, 07h
+	call	print
+	mov	[buf_len], word 0
+	.readchar:
+		call	getc
+		mov	[charbuf], al
+		cmp	al, 13d
+		je	prompt
+		cmp	al, 8
+		jne	.printchar
+		cmp	[buf_len], word 0
+		je	.readchar
+			sub	dword [cursor_pos], 2
+			call	update_hw_cursor
+			mov	edi, [cursor_pos]
+			mov	[es:edi], word 0700h
+			dec	word [buf_len]
+			jmp	.readchar
+		.printchar:
+		inc	word [buf_len]
+		mov	ebx, charbuf
+		mov	ah, 07h
+		call	print
+jmp	.readchar
+
+buf_len	dw 0
+charbuf	db 0,0
+
 jmp	$
 
-jmp	ContinueC
-omg db 'THIS', 13d, 10d, 0
-omg2 db 'IS', 13d, 10d, 0
-omg3 db 'SPARTA!', 13d, 10d, 0
-msg_hang db 'hang',0
+jmp	continue_ckernel
+omg db 'Testing', 13d, 10d, 0
+omg2 db 'timing', 13d, 10d, 0
+omg3 db 'functions!', 13d, 10d, 0
+msg_prompt db 13d, 10d, 'test>',0
 msg_floppy	db "Initializing floppy....[", 0h
 msg_interrupts	db "Setting up interrupts..[", 0h
 msg_timer	db "Setting up timer.......[", 0h
-ISRDiv0:
+msg_keyboard	db "Initializing keyboard..[", 0h
+isr_div0:
 	pusha
-	mov	ebx, MSGDiv0
+	mov	ebx, msg_div0
 	jmp	panic
 	popa
 ret
-MSGDiv0 db "Divide by zero",0h
+msg_div0 db "Divide by zero",0h
 
-io_wait:
-	push	cx
-	mov	cx, 10h
-	.l1:
-		times	5 nop
-	loop	.l1
-	pop	cx
-ret
-
-print:
-	; Print NULL-termiated string
-	; ebx	string pointer
-	; ah	attribute
-	mov	edi, [cursor_pos]
-	;add	edi, edx
-	.next:
-	mov	al, [ds:ebx]
-	cmp	al,0
-	je	.end
-	cmp	al, 10d
-	jne	.check_cr
-		;Line Break
-		call	line_break
-		inc	ebx
-		jmp	.next
-	.check_cr:
-	cmp	al, 13d
-	jne	.print
-		call	carriage_return
-		inc	ebx
-		jmp	.next
-	.print:
-		mov	[es:edi], ax
-		add	edi, 2
-		inc	ebx
-	jmp	.next
-.end:
-mov	[cursor_pos], edi
-call	update_hw_cursor
-ret
-
-line_break:
-	cmp	edi, (0B8000h+(0A0h*24d))
-	jb	.move
-		call	scroll_down
-		jmp	.end
-	.move:
-	add	edi, 0A0h
-.end:
-ret
-
-carriage_return:
-	push	ax
-	mov	edx, edi
-	sub	edx, 0B8000h
-	mov	ax, dx
-	shr	edx, 16
-	mov	cx, 0A0h
-	div	cx
-	mul	cx
-	mov	di, dx
-	shl	edi, 16
-	mov	di, ax
-	add	edi, 0B8000h
-	pop	ax
-ret
-
-scroll_down:
-	pusha
-	mov	edi, 0B8000h
-	mov	esi, (0B8000h+0A0h)
-	mov	ecx, (80*24)/2
-	.l1:
-		mov	eax, [es:esi]
-		mov	[es:edi], eax
-		add	edi, 4
-		add	esi, 4
-	loop	.l1
-	mov	cx, 40
-	.l2:
-		mov	[es:edi], dword 0
-		add	edi, 4
-	loop	.l2
-	popa
-ret
-
-update_hw_cursor:
-	mov	edx, [cursor_pos]
-	sub	edx, 0B8000h
-	mov	ax, dx
-	shr	edx, 16
-	mov	cx, 2
-	div	cx
-	mov	cx, ax
-	mov	dx, 3D4h
-	mov	al, 0Fh
-	out	dx, al
-	inc	dx
-	mov	al, cl
-	out	dx, al
-	dec	dx
-	mov	al, 0Eh
-	out	dx, al
-	inc	dx
-	mov	al, ch
-	out	dx, al
-ret
-cursor_pos dd 0B8320h
 
 panic:
 	push	ebx
-	xor	edx, edx
+	mov	ah, 04h
 	mov	ebx, MSGPanic
 	call	print
 	pop	ebx
-	mov	edx, 0Eh
+	mov	ah, 07h
 	call	print
 	cli
 	hlt
 	jmp	$
-MSGPanic	db "PANIC: ", 0h
+MSGPanic	db 13d, 10d,"PANIC: ", 0h
 
 %include	'interrupts.asm'
 %include	'time.asm'
+%include	'driver_io.asm'
 %include	'driver_floppy.asm'
 
-ContinueC:
+continue_ckernel:
 ;Commented out to continue to c-kernel
 cli
 hlt
