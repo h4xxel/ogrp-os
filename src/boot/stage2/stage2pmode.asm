@@ -126,6 +126,7 @@ loop omgloop
 ; loop	lollol
 
 ;Testing keyboard input :))
+
 prompt:
 	mov	ebx, msg_prompt
 	mov	ah, 07h
@@ -176,11 +177,92 @@ isr_div0:
 ret
 msg_div0 db "Divide by zero",0h
 
+reboot:
+	pusha
+	mov	esi, 0B8720h
+	mov	edi, framebuf_bak
+	mov	ecx, 3
+	.bl1:
+		push	ecx
+		mov	ecx, 10h
+		push	es
+		push	ds
+		pop	es
+		pop	ds
+		rep	movsw
+		push	es
+		push	ds
+		pop	es
+		pop	ds
+		pop	ecx
+		add	esi, 80h
+	loop	.bl1
+	
+	mov	esi, msg_reboot
+	mov	edi, 0B8720h
+	mov	ah, 17h
+	mov	ecx, 3
+	.pl1:
+		push ecx
+		mov	ecx, 10h
+		.pl2:
+			lodsb
+			stosw
+		loop	.pl2
+		add	edi, 80h
+		pop	ecx
+	loop	.pl1
+	call	getc
+	cmp	al, 'y'
+	jne	.restore
+	
+		;Empty buffer
+		.w1:
+			in   al, 0x64
+			test al, 00000010b
+		jne  .w1
+		
+		;Reset
+		mov  al, 0xFE
+		out  0x64, al
+		
+		db 0EAh
+		dw 0000h
+		dw 0FFFFh
+		
+		;Fall-through
+		jmp	$
+		
+		.idtr	dw 0
+			dd 0
+		
+	.restore:
+	mov	edi, 0B8720h
+	mov	esi, framebuf_bak
+	mov	ecx, 3
+	.rl1:
+		push	ecx
+		mov	ecx, 10h
+		rep	movsw
+		pop	ecx
+		add	edi, 80h
+	loop	.rl1
+.end:
+popa
+ret
+
+msg_reboot	db "                "
+		db " Reboot?  [Y/N] "
+		db "                "
+
+framebuf_bak	dw 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+		dw 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+		dw 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 panic:
 	push	ebx
 	mov	ah, 04h
-	mov	ebx, MSGPanic
+	mov	ebx, msg_panic
 	call	print
 	pop	ebx
 	mov	ah, 07h
@@ -188,12 +270,12 @@ panic:
 	cli
 	hlt
 	jmp	$
-MSGPanic	db 13d, 10d,"PANIC: ", 0h
+msg_panic	db 13d, 10d,"PANIC: ", 0h
 
 %include	'interrupts.asm'
 %include	'time.asm'
-%include	'driver_io.asm'
-%include	'driver_floppy.asm'
+%include	'drivers/io.asm'
+%include	'drivers/floppy.asm'
 
 continue_ckernel:
 ;Commented out to continue to c-kernel

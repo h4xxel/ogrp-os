@@ -1,5 +1,6 @@
 MAKEFLAGS += --no-print-directory
-FILENAME	= image.img
+FILENAME	= out.bin
+IMAGE = ogrp-os.img
 
 all: make_dirs
 
@@ -14,8 +15,12 @@ image: all
 	@cat src/boot/stage2/stage2 >> $(FILENAME)
 	@echo " [ APPEND ]	src/ckernel/ckernel-bin >> $(FILENAME)"
 	@cat src/ckernel/ckernel-bin >> $(FILENAME)
+	@touch $(IMAGE)
+	@rm $(IMAGE)
+	@dd if=/dev/zero of=$(IMAGE) bs=512 count=2880
+	@dd if=$(FILENAME) of=$(IMAGE) conv=notrunc bs=512
 	@echo " Done. Your image is located at:"
-	@echo " $(FILENAME)"
+	@echo " $(IMAGE)"
 	@echo
 	
 clean_dirs:
